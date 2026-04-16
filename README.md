@@ -1,7 +1,7 @@
 # aads - Apple Ads CLI
 
 [![Latest release](https://img.shields.io/github/v/release/imesart/apple-ads-cli)](https://github.com/imesart/apple-ads-cli/releases)
-[![API version](https://img.shields.io/badge/dynamic/json?label=API&url=https%3A%2F%2Fraw.githubusercontent.com%2Fimesart%2Fapple-ads-cli%2Fmain%2Fdocs%2Fapple_ads%2Fopenapi-latest.json&query=%24.info.version&prefix=v&color=cyan)](docs/apple_ads/openapi-latest.json)
+[![API version](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fimesart.com%2Fip%2Faads-openapi-latest.php&query=%24.info.version&prefix=v&label=API&color=cyan)](docs/apple_ads/openapi-latest.json)
 [![Go version](https://img.shields.io/github/go-mod/go-version/imesart/apple-ads-cli?logo=go)](go.mod)
 [![License](https://img.shields.io/github/license/imesart/apple-ads-cli)](LICENSE)
 
