@@ -1,0 +1,12 @@
+POST https://api.searchads.apple.com/api/v5/campaigns/123/negativekeywords/delete/bulk
+Accept: application/json
+Authorization: Bearer token
+Content-Type: application/json
+Host: api.searchads.apple.com
+X-AP-Context: orgId=12345
+
+[
+  789,
+  246,
+  135
+]

@@ -1,0 +1,377 @@
+[
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/AdGroupKeywordsRequestsTests.swift",
+    "source_test": "testCreateRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/ad_group_keywords/create.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/AdGroupKeywordsRequestsTests.swift",
+    "source_test": "testUpdateRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/ad_group_keywords/update.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/AdGroupKeywordsRequestsTests.swift",
+    "source_test": "testDeleteRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/ad_group_keywords/delete.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/AdGroupKeywordsRequestsTests.swift",
+    "source_test": "testGetRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/ad_group_keywords/get.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/AdGroupKeywordsRequestsTests.swift",
+    "source_test": "testListRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/ad_group_keywords/list.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/AdGroupKeywordsRequestsTests.swift",
+    "source_test": "testFindRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/ad_group_keywords/find.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/AdGroupsRequestsTests.swift",
+    "source_test": "testCreateRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/ad_groups/create.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/AdGroupsRequestsTests.swift",
+    "source_test": "testDeleteRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/ad_groups/delete.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/AdGroupsRequestsTests.swift",
+    "source_test": "testFindRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/ad_groups/find.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/AdGroupsRequestsTests.swift",
+    "source_test": "testFindOrgWideRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/ad_groups/find_org_wide.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/AdGroupsRequestsTests.swift",
+    "source_test": "testListRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/ad_groups/list.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/AdGroupsRequestsTests.swift",
+    "source_test": "testGetRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/ad_groups/get.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/AdGroupsRequestsTests.swift",
+    "source_test": "testUpdateRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/ad_groups/update.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/AdRejectionsRequestsTests.swift",
+    "source_test": "testAppAssetsFindRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/ad_rejections/app_assets_find.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/AdRejectionsRequestsTests.swift",
+    "source_test": "testGetRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/ad_rejections/get.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/AdRejectionsRequestsTests.swift",
+    "source_test": "testFindRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/ad_rejections/find.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/AdsRequestsTests.swift",
+    "source_test": "testCreateRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/ads/create.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/AdsRequestsTests.swift",
+    "source_test": "testDeleteRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/ads/delete.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/AdsRequestsTests.swift",
+    "source_test": "testGetRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/ads/get.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/AdsRequestsTests.swift",
+    "source_test": "testFindRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/ads/find.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/AdsRequestsTests.swift",
+    "source_test": "testFindOrgWideRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/ads/find_org_wide.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/AdsRequestsTests.swift",
+    "source_test": "testListRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/ads/list.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/AdsRequestsTests.swift",
+    "source_test": "testUpdateRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/ads/update.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/AppsRequestsTests.swift",
+    "source_test": "testEligibilityRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/apps/eligibility.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/AppsRequestsTests.swift",
+    "source_test": "testSearchRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/apps/search.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/AppsRequestsTests.swift",
+    "source_test": "testDetailsRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/apps/details.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/AppsRequestsTests.swift",
+    "source_test": "testLocaleDetailsRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/apps/locale_details.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/BudgetOrdersRequestsTests.swift",
+    "source_test": "testCreateRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/budget_orders/create.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/BudgetOrdersRequestsTests.swift",
+    "source_test": "testUpdateRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/budget_orders/update.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/BudgetOrdersRequestsTests.swift",
+    "source_test": "testGetRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/budget_orders/get.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/BudgetOrdersRequestsTests.swift",
+    "source_test": "testListRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/budget_orders/list.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/CampaignKeywordsRequestsTests.swift",
+    "source_test": "testCreateRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/campaign_keywords/create.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/CampaignKeywordsRequestsTests.swift",
+    "source_test": "testUpdateRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/campaign_keywords/update.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/CampaignKeywordsRequestsTests.swift",
+    "source_test": "testDeleteRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/campaign_keywords/delete.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/CampaignKeywordsRequestsTests.swift",
+    "source_test": "testGetRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/campaign_keywords/get.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/CampaignKeywordsRequestsTests.swift",
+    "source_test": "testListRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/campaign_keywords/list.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/CampaignKeywordsRequestsTests.swift",
+    "source_test": "testFindRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/campaign_keywords/find.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/CampaignsRequestsTests.swift",
+    "source_test": "testCreateRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/campaigns/create.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/CampaignsRequestsTests.swift",
+    "source_test": "testUpdateRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/campaigns/update.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/CampaignsRequestsTests.swift",
+    "source_test": "testDeleteRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/campaigns/delete.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/CampaignsRequestsTests.swift",
+    "source_test": "testGetRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/campaigns/get.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/CampaignsRequestsTests.swift",
+    "source_test": "testListRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/campaigns/list.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/CampaignsRequestsTests.swift",
+    "source_test": "testFindRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/campaigns/find.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/ContextRequestsTests.swift",
+    "source_test": "testAccessTokenRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/context/access_token.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/ContextRequestsTests.swift",
+    "source_test": "testMeDetailsRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/context/me_details.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/ContextRequestsTests.swift",
+    "source_test": "testUserACLRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/context/user_acl.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/CreativesRequestsTests.swift",
+    "source_test": "testCreateRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/creatives/create.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/CreativesRequestsTests.swift",
+    "source_test": "testGetRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/creatives/get.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/CreativesRequestsTests.swift",
+    "source_test": "testListRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/creatives/list.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/CreativesRequestsTests.swift",
+    "source_test": "testFindRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/creatives/find.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/CustomProductPagesRequestsTests.swift",
+    "source_test": "testAppPreviewDeviceSizesRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/custom_product_pages/app_preview_device_sizes.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/CustomProductPagesRequestsTests.swift",
+    "source_test": "testProductPageLocalesRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/custom_product_pages/product_page_locales.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/CustomProductPagesRequestsTests.swift",
+    "source_test": "testSupportedCountriesOrRegionsRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/custom_product_pages/supported_countries_or_regions.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/CustomProductPagesRequestsTests.swift",
+    "source_test": "testSupportedCountriesOrRegionsNoQueryRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/custom_product_pages/supported_countries_or_regions_no_query.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/CustomProductPagesRequestsTests.swift",
+    "source_test": "testProductPageRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/custom_product_pages/product_page.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/CustomProductPagesRequestsTests.swift",
+    "source_test": "testProductPagesRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/custom_product_pages/product_pages.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/GeolocationsRequestsTests.swift",
+    "source_test": "testListRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/geolocations/list.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/GeolocationsRequestsTests.swift",
+    "source_test": "testSearchRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/geolocations/search.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/ReportsRequestsTests.swift",
+    "source_test": "testAdGroupReportRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/reports/ad_group_report.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/ReportsRequestsTests.swift",
+    "source_test": "testAdReportRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/reports/ad_report.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/ReportsRequestsTests.swift",
+    "source_test": "testCampaignReportRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/reports/campaign_report.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/ReportsRequestsTests.swift",
+    "source_test": "testKeywordReportRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/reports/keyword_report.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/ReportsRequestsTests.swift",
+    "source_test": "testKeywordCampaignWideReportRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/reports/keyword_campaign_wide_report.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/ReportsRequestsTests.swift",
+    "source_test": "testSearchTermReportRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/reports/search_term_report.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/ReportsRequestsTests.swift",
+    "source_test": "testSearchTermCampaignWideReportRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/reports/search_term_campaign_wide_report.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/ReportsRequestsTests.swift",
+    "source_test": "testImpressionShareReportCreateRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/reports/impression_share_report_create.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/ReportsRequestsTests.swift",
+    "source_test": "testImpressionShareReportGetRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/reports/impression_share_report_get.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/ReportsRequestsTests.swift",
+    "source_test": "testImpressionShareReportListRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/reports/impression_share_report_list.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/TargetingKeywordsRequestsTests.swift",
+    "source_test": "testCreateRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/targeting_keywords/create.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/TargetingKeywordsRequestsTests.swift",
+    "source_test": "testUpdateRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/targeting_keywords/update.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/TargetingKeywordsRequestsTests.swift",
+    "source_test": "testDeleteRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/targeting_keywords/delete.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/TargetingKeywordsRequestsTests.swift",
+    "source_test": "testDeleteBulkRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/targeting_keywords/delete_bulk.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/TargetingKeywordsRequestsTests.swift",
+    "source_test": "testGetRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/targeting_keywords/get.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/TargetingKeywordsRequestsTests.swift",
+    "source_test": "testListRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/targeting_keywords/list.golden"
+  },
+  {
+    "source_file": "../swift-apple-search-ads-api-main/Tests/Snapshots/TargetingKeywordsRequestsTests.swift",
+    "source_test": "testFindRequest",
+    "golden_file": "internal/api/testdata/request_snapshots/targeting_keywords/find.golden"
+  }
+]

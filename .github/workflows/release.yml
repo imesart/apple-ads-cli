@@ -1,0 +1,124 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - '[0-9]*.[0-9]*.[0-9]*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    if: github.repository == 'imesart/apple-ads-cli'
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Validate release tag
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          if [[ ! "$TAG" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Release tags must match x.y.z. Got: ${TAG}"
+            exit 1
+          fi
+          printf 'VERSION=%s\n' "$TAG" >> "$GITHUB_ENV"
+
+      - name: Set up Go
+        uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Set up Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: "3.x"
+
+      - name: Run release guardrails
+        run: |
+          make format-check
+          make lint
+          make commands-doc-check
+          make test
+
+      - name: Import Apple certificate
+        uses: apple-actions/import-codesign-certs@95e84a1a18f2bdbc5c6ab9b7f4429372e4b13a8b # v5.0.3
+        with:
+          p12-file-base64: ${{ secrets.APPLE_DEVELOPER_ID_CERT }}
+          p12-password: ${{ secrets.APPLE_DEVELOPER_ID_PASSWORD }}
+
+      - name: Build release archives
+        env:
+          APPLE_DEVELOPER_ID: ${{ secrets.APPLE_DEVELOPER_ID }}
+        run: |
+          if [ -z "$APPLE_DEVELOPER_ID" ]; then
+            echo "::error::APPLE_DEVELOPER_ID is required for signed macOS release artifacts"
+            exit 1
+          fi
+          make release-artifacts VERSION="${VERSION}"
+
+      - name: Display release files
+        run: ls -la release/
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b # v2.5.0
+        with:
+          files: release/*
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update Homebrew tap
+        env:
+          TAP_GITHUB_TOKEN: ${{ secrets.TAP_GITHUB_TOKEN }}
+        run: |
+          if [ -z "$TAP_GITHUB_TOKEN" ]; then
+            echo "::error::Homebrew tap update requires TAP_GITHUB_TOKEN"
+            exit 1
+          fi
+
+          ARM_ARCHIVE="aads_${VERSION}_darwin_arm64.tar.gz"
+          AMD_ARCHIVE="aads_${VERSION}_darwin_amd64.tar.gz"
+          ARM_SHA256=$(shasum -a 256 "release/${ARM_ARCHIVE}" | cut -d ' ' -f 1)
+          AMD_SHA256=$(shasum -a 256 "release/${AMD_ARCHIVE}" | cut -d ' ' -f 1)
+
+          git clone "https://x-access-token:${TAP_GITHUB_TOKEN}@github.com/imesart/homebrew-tap.git" homebrew-tap
+          cd homebrew-tap
+
+          cat > Formula/aads.rb <<EOF
+          # typed: false
+          # frozen_string_literal: true
+
+          class Aads < Formula
+            desc "Apple Ads CLI"
+            homepage "https://github.com/imesart/apple-ads-cli"
+            version "${VERSION}"
+            license "MIT"
+
+            if Hardware::CPU.arm?
+              url "https://github.com/imesart/apple-ads-cli/releases/download/${VERSION}/${ARM_ARCHIVE}"
+              sha256 "${ARM_SHA256}"
+            else
+              url "https://github.com/imesart/apple-ads-cli/releases/download/${VERSION}/${AMD_ARCHIVE}"
+              sha256 "${AMD_SHA256}"
+            end
+
+            def install
+              bin.install "aads"
+            end
+
+            test do
+              assert_match "Target API:", shell_output("#{bin}/aads version")
+            end
+          end
+          EOF
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Formula/aads.rb
+          git commit -m "Update aads to ${VERSION}" || echo "No changes to commit"
+          git push

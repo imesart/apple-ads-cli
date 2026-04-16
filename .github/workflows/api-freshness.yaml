@@ -1,0 +1,99 @@
+name: API Freshness
+
+on:
+  schedule:
+    - cron: "23 5 * * 2"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  api-freshness:
+    name: Check Apple Ads API docs freshness
+    if: github.repository == 'imesart/apple-ads-cli'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: "3.x"
+
+      - name: Regenerate Apple Ads API artifacts
+        run: |
+          cp docs/apple_ads/paths.txt "$RUNNER_TEMP/paths.before.txt"
+          make openapi
+
+      - name: Summarize endpoint changes
+        id: summary
+        run: |
+          sort "$RUNNER_TEMP/paths.before.txt" > "$RUNNER_TEMP/paths.before.sorted.txt"
+          sort docs/apple_ads/paths.txt > "$RUNNER_TEMP/paths.after.sorted.txt"
+          comm -13 "$RUNNER_TEMP/paths.before.sorted.txt" "$RUNNER_TEMP/paths.after.sorted.txt" > "$RUNNER_TEMP/paths.added.txt"
+          comm -23 "$RUNNER_TEMP/paths.before.sorted.txt" "$RUNNER_TEMP/paths.after.sorted.txt" > "$RUNNER_TEMP/paths.removed.txt"
+
+          {
+            echo "## Apple Ads API docs freshness"
+            echo
+            echo "Regenerated generated Apple Ads API artifacts from Apple's documentation JSON."
+            echo
+            echo "### Added endpoints"
+            if [ -s "$RUNNER_TEMP/paths.added.txt" ]; then
+              sed 's/^/- `/' "$RUNNER_TEMP/paths.added.txt" | sed 's/$/`/'
+            else
+              echo "- None"
+            fi
+            echo
+            echo "### Removed endpoints"
+            if [ -s "$RUNNER_TEMP/paths.removed.txt" ]; then
+              sed 's/^/- `/' "$RUNNER_TEMP/paths.removed.txt" | sed 's/$/`/'
+            else
+              echo "- None"
+            fi
+          } > "$RUNNER_TEMP/pr-body.md"
+
+          {
+            echo "body_path=$RUNNER_TEMP/pr-body.md"
+            if ! git diff --quiet -- docs/apple_ads/openapi-v*.json docs/apple_ads/openapi-latest.json docs/apple_ads/paths.txt internal/cli/schema/schema_index.json; then
+              echo "has_changes=true"
+            else
+              echo "has_changes=false"
+            fi
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Open freshness pull request
+        if: steps.summary.outputs.has_changes == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BODY_PATH: ${{ steps.summary.outputs.body_path }}
+          BRANCH_NAME: automation/api-freshness
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git fetch origin "$BRANCH_NAME:refs/remotes/origin/$BRANCH_NAME" || true
+          git switch -C "$BRANCH_NAME"
+          git add docs/apple_ads/openapi-v*.json docs/apple_ads/openapi-latest.json docs/apple_ads/paths.txt internal/cli/schema/schema_index.json
+          git commit -m "Refresh Apple Ads API docs"
+          git push --force-with-lease origin "$BRANCH_NAME"
+
+          if gh pr view "$BRANCH_NAME" --json number --jq .number >/dev/null 2>&1; then
+            gh pr edit "$BRANCH_NAME" --title "Refresh Apple Ads API docs" --body-file "$BODY_PATH"
+          else
+            gh pr create \
+              --base "${GITHUB_REF_NAME}" \
+              --head "$BRANCH_NAME" \
+              --title "Refresh Apple Ads API docs" \
+              --body-file "$BODY_PATH"
+          fi
+
+      - name: Report freshness
+        if: steps.summary.outputs.has_changes == 'false'
+        run: echo "Apple Ads API generated artifacts are up to date."

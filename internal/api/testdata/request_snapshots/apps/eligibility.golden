@@ -1,0 +1,32 @@
+POST https://api.searchads.apple.com/api/v5/apps/12345/eligibilities/find
+Accept: application/json
+Authorization: Bearer token
+Content-Type: application/json
+Host: api.searchads.apple.com
+X-AP-Context: orgId=12345
+
+{
+  "conditions": [
+    {
+      "field": "state",
+      "operator": "EQUALS",
+      "values": [
+        "ELIGIBLE"
+      ]
+    }
+  ],
+  "fields": [
+    "adamId",
+    "supplySource"
+  ],
+  "orderBy": [
+    {
+      "field": "minAge",
+      "sortOrder": "ASCENDING"
+    }
+  ],
+  "pagination": {
+    "limit": 20,
+    "offset": 40
+  }
+}

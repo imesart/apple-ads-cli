@@ -1,0 +1,8 @@
+POST https://api.searchads.apple.com/api/v5/ads/find
+Accept: application/json
+Authorization: Bearer token
+Content-Type: application/json
+Host: api.searchads.apple.com
+X-AP-Context: orgId=12345
+
+{}

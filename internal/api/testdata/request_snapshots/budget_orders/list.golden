@@ -1,0 +1,5 @@
+GET https://api.searchads.apple.com/api/v5/budgetorders?limit=20&offset=40
+Accept: application/json
+Authorization: Bearer token
+Host: api.searchads.apple.com
+X-AP-Context: orgId=12345

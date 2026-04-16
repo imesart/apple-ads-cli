@@ -1,0 +1,5 @@
+GET https://api.searchads.apple.com/api/v5/search/geo?countrycode=US&entity=Locality&limit=20&offset=40&query=San+Fran
+Accept: application/json
+Authorization: Bearer token
+Host: api.searchads.apple.com
+X-AP-Context: orgId=12345

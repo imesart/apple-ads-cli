@@ -1,0 +1,5 @@
+GET https://api.searchads.apple.com/api/v5/apps/123/product-pages?name=Page+Name&state=VISIBLE
+Accept: application/json
+Authorization: Bearer token
+Host: api.searchads.apple.com
+X-AP-Context: orgId=12345

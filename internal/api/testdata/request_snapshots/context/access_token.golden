@@ -1,0 +1,5 @@
+POST https://appleid.apple.com/auth/oauth2/token
+Content-Type: application/x-www-form-urlencoded
+Host: appleid.apple.com
+
+client_id=client+id&client_secret=client+secret&grant_type=client_credentials&scope=searchadsorg

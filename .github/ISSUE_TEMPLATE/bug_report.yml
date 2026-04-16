@@ -1,0 +1,48 @@
+name: Bug report
+description: Report behavior that is broken or contrary to the documented requirements.
+title: "bug: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug. Do not include credentials, tokens, private keys, customer data, or real account IDs.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What happened?
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What did you expect to happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Reproduction steps
+      description: Include commands, flags, input shape, and relevant output. Redact sensitive values.
+      placeholder: |
+        1. Run `bin/aads ...`
+        2. Observe ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Include OS, Go version if building from source, and `aads version` output if available.
+      placeholder: |
+        OS:
+        Go:
+        aads:
+    validations:
+      required: false

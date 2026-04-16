@@ -1,0 +1,5 @@
+GET https://api.searchads.apple.com/api/v5/countries-or-regions?countriesOrRegions=US%2CGB
+Accept: application/json
+Authorization: Bearer token
+Host: api.searchads.apple.com
+X-AP-Context: orgId=12345

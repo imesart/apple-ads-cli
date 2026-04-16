@@ -1,0 +1,117 @@
+POST https://api.searchads.apple.com/api/v5/campaigns/123/adgroups
+Accept: application/json
+Authorization: Bearer token
+Content-Type: application/json
+Host: api.searchads.apple.com
+X-AP-Context: orgId=12345
+
+{
+  "automatedKeywordsOptIn": true,
+  "campaignId": 123,
+  "cpaGoal": {
+    "amount": "5",
+    "currency": "USD"
+  },
+  "defaultBidAmount": {
+    "amount": "1",
+    "currency": "USD"
+  },
+  "deleted": false,
+  "displayStatus": "PAUSED",
+  "endTime": "1970-01-24T03:33:20.000",
+  "id": 456,
+  "modificationTime": "1970-01-18T08:40:00.000",
+  "name": "My Ad Group",
+  "orgId": 789,
+  "paymentModel": "PAYG",
+  "pricingModel": "CPC",
+  "servingStateReasons": [
+    "APP_NOT_SUPPORT",
+    "AD_GROUP_PAUSED_BY_USER"
+  ],
+  "servingStatus": "NOT_RUNNING",
+  "startTime": "1970-01-12T13:46:40.000",
+  "status": "ENABLED",
+  "targetingDimensions": {
+    "adminArea": {
+      "excluded": [
+        "New York"
+      ],
+      "included": [
+        "California"
+      ]
+    },
+    "age": {
+      "excluded": [
+        {
+          "maxAge": 26,
+          "minAge": 24
+        }
+      ],
+      "included": [
+        {
+          "maxAge": 30,
+          "minAge": 18
+        }
+      ]
+    },
+    "appCategories": {
+      "excluded": [
+        2468
+      ],
+      "included": [
+        13579
+      ]
+    },
+    "appDownloaders": {
+      "excluded": [
+        "13579"
+      ],
+      "included": [
+        "2468"
+      ]
+    },
+    "country": {
+      "excluded": [
+        "GB"
+      ],
+      "included": [
+        "US"
+      ]
+    },
+    "daypart": {
+      "userTime": {
+        "excluded": [
+          20
+        ],
+        "included": [
+          10
+        ]
+      }
+    },
+    "deviceClass": {
+      "excluded": [
+        "IPAD"
+      ],
+      "included": [
+        "IPHONE"
+      ]
+    },
+    "gender": {
+      "excluded": [
+        "M"
+      ],
+      "included": [
+        "F"
+      ]
+    },
+    "locality": {
+      "excluded": [
+        "San Francisco"
+      ],
+      "included": [
+        "San Jose"
+      ]
+    }
+  }
+}

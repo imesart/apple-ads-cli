@@ -1,0 +1,34 @@
+POST https://api.searchads.apple.com/api/v5/custom-reports
+Accept: application/json
+Authorization: Bearer token
+Content-Type: application/json
+Host: api.searchads.apple.com
+X-AP-Context: orgId=12345
+
+{
+  "dateRange": "LAST_4_WEEKS",
+  "endTime": "2025-01-31",
+  "granularity": "DAILY",
+  "name": "My Report",
+  "selector": {
+    "conditions": [
+      {
+        "field": "granularity",
+        "operator": "IN",
+        "values": [
+          "DAILY",
+          "WEEKLY"
+        ]
+      },
+      {
+        "field": "dimensions",
+        "operator": "IN",
+        "values": [
+          "searchPopularity",
+          "rank"
+        ]
+      }
+    ]
+  },
+  "startTime": "2024-12-31"
+}

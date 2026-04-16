@@ -1,0 +1,404 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/imesart/apple-ads-cli/main/docs/schemas/aads-v1.schema.json",
+  "title": "aads structure export schema",
+  "description": "Schema for JSON documents containing Apple Ads structured data about campaigns, ad groups, keywords, and negative keywords.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/campaignsScopeRoot"
+    },
+    {
+      "$ref": "#/$defs/adgroupsScopeRoot"
+    }
+  ],
+  "$defs": {
+    "idValue": {
+      "description": "API IDs are usually numbers, but string forms are accepted for portability.",
+      "oneOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "string",
+          "pattern": "^[0-9]+$"
+        }
+      ]
+    },
+    "dateTimeValue": {
+      "type": "string",
+      "description": "Exported datetimes are serialized as strings. Import also accepts relative values like `now` and `+3mo`."
+    },
+    "money": {
+      "type": "object",
+      "properties": {
+        "amount": {
+          "type": "string"
+        },
+        "currency": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "amount",
+        "currency"
+      ],
+      "additionalProperties": true
+    },
+    "campaignEntity": {
+      "type": "object",
+      "description": "Campaign data in the exported structure format. Additional properties are allowed because full-field exports may include extra API fields.",
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/idValue"
+        },
+        "orgId": {
+          "$ref": "#/$defs/idValue"
+        },
+        "adamId": {
+          "$ref": "#/$defs/idValue"
+        },
+        "name": {
+          "type": "string"
+        },
+        "adChannelType": {
+          "type": "string"
+        },
+        "countriesOrRegions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "billingEvent": {
+          "type": "string"
+        },
+        "dailyBudgetAmount": {
+          "$ref": "#/$defs/money"
+        },
+        "budgetAmount": {
+          "$ref": "#/$defs/money"
+        },
+        "supplySources": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "biddingStrategy": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "startTime": {
+          "$ref": "#/$defs/dateTimeValue"
+        },
+        "endTime": {
+          "$ref": "#/$defs/dateTimeValue"
+        },
+        "locInvoiceDetails": {
+          "type": "object"
+        },
+        "budgetOrders": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/idValue"
+          }
+        },
+        "paymentModel": {
+          "type": "string"
+        },
+        "creationTime": {
+          "$ref": "#/$defs/dateTimeValue"
+        },
+        "modificationTime": {
+          "$ref": "#/$defs/dateTimeValue"
+        },
+        "deleted": {
+          "type": "boolean"
+        },
+        "displayStatus": {
+          "type": "string"
+        },
+        "servingStatus": {
+          "type": "string"
+        },
+        "servingStateReasons": {
+          "type": "array",
+          "items": {}
+        },
+        "countryOrRegionServingStateReasons": {
+          "type": "array",
+          "items": {}
+        },
+        "sapinLawResponse": {}
+      },
+      "additionalProperties": true
+    },
+    "adgroupEntity": {
+      "type": "object",
+      "description": "Ad group data in the exported structure format. Additional properties are allowed because full-field exports may include extra API fields.",
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/idValue"
+        },
+        "orgId": {
+          "$ref": "#/$defs/idValue"
+        },
+        "campaignId": {
+          "$ref": "#/$defs/idValue"
+        },
+        "name": {
+          "type": "string"
+        },
+        "pricingModel": {
+          "type": "string"
+        },
+        "defaultBidAmount": {
+          "$ref": "#/$defs/money"
+        },
+        "status": {
+          "type": "string"
+        },
+        "cpaGoal": {
+          "$ref": "#/$defs/money"
+        },
+        "automatedKeywordsOptIn": {
+          "type": "boolean"
+        },
+        "paymentModel": {
+          "type": "string"
+        },
+        "biddingStrategy": {
+          "type": "string"
+        },
+        "startTime": {
+          "$ref": "#/$defs/dateTimeValue"
+        },
+        "endTime": {
+          "$ref": "#/$defs/dateTimeValue"
+        },
+        "targetingDimensions": {
+          "type": "object"
+        },
+        "creationTime": {
+          "$ref": "#/$defs/dateTimeValue"
+        },
+        "modificationTime": {
+          "$ref": "#/$defs/dateTimeValue"
+        },
+        "deleted": {
+          "type": "boolean"
+        },
+        "displayStatus": {
+          "type": "string"
+        },
+        "servingStatus": {
+          "type": "string"
+        },
+        "servingStateReasons": {
+          "type": "array",
+          "items": {}
+        }
+      },
+      "additionalProperties": true
+    },
+    "keywordEntity": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/idValue"
+        },
+        "campaignId": {
+          "$ref": "#/$defs/idValue"
+        },
+        "adGroupId": {
+          "$ref": "#/$defs/idValue"
+        },
+        "text": {
+          "type": "string"
+        },
+        "matchType": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "bidAmount": {
+          "$ref": "#/$defs/money"
+        },
+        "creationTime": {
+          "$ref": "#/$defs/dateTimeValue"
+        },
+        "modificationTime": {
+          "$ref": "#/$defs/dateTimeValue"
+        },
+        "deleted": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "text",
+        "matchType"
+      ],
+      "additionalProperties": true
+    },
+    "negativeKeywordEntity": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/idValue"
+        },
+        "campaignId": {
+          "$ref": "#/$defs/idValue"
+        },
+        "adGroupId": {
+          "$ref": "#/$defs/idValue"
+        },
+        "text": {
+          "type": "string"
+        },
+        "matchType": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "creationTime": {
+          "$ref": "#/$defs/dateTimeValue"
+        },
+        "modificationTime": {
+          "$ref": "#/$defs/dateTimeValue"
+        },
+        "deleted": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "text",
+        "matchType"
+      ],
+      "additionalProperties": true
+    },
+    "adgroupNode": {
+      "type": "object",
+      "properties": {
+        "adgroup": {
+          "$ref": "#/$defs/adgroupEntity"
+        },
+        "adgroupNegativeKeywords": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/negativeKeywordEntity"
+          }
+        },
+        "keywords": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/keywordEntity"
+          }
+        }
+      },
+      "required": [
+        "adgroup"
+      ],
+      "additionalProperties": false
+    },
+    "campaignNode": {
+      "type": "object",
+      "properties": {
+        "campaign": {
+          "$ref": "#/$defs/campaignEntity"
+        },
+        "campaignNegativeKeywords": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/negativeKeywordEntity"
+          }
+        },
+        "adgroups": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/adgroupNode"
+          }
+        }
+      },
+      "required": [
+        "campaign"
+      ],
+      "additionalProperties": false
+    },
+    "campaignsScopeRoot": {
+      "type": "object",
+      "properties": {
+        "$schema": {
+          "const": "https://raw.githubusercontent.com/imesart/apple-ads-cli/main/docs/schemas/aads-v1.schema.json"
+        },
+        "schemaVersion": {
+          "const": 1
+        },
+        "type": {
+          "const": "structure"
+        },
+        "scope": {
+          "const": "campaigns"
+        },
+        "creationTime": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "campaigns": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/campaignNode"
+          }
+        }
+      },
+      "required": [
+        "$schema",
+        "schemaVersion",
+        "type",
+        "scope",
+        "creationTime",
+        "campaigns"
+      ],
+      "additionalProperties": false
+    },
+    "adgroupsScopeRoot": {
+      "type": "object",
+      "properties": {
+        "$schema": {
+          "const": "https://raw.githubusercontent.com/imesart/apple-ads-cli/main/docs/schemas/aads-v1.schema.json"
+        },
+        "schemaVersion": {
+          "const": 1
+        },
+        "type": {
+          "const": "structure"
+        },
+        "scope": {
+          "const": "adgroups"
+        },
+        "creationTime": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "adgroups": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/adgroupNode"
+          }
+        }
+      },
+      "required": [
+        "$schema",
+        "schemaVersion",
+        "type",
+        "scope",
+        "creationTime",
+        "adgroups"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

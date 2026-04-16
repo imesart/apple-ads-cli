@@ -1,0 +1,1403 @@
+{
+  "endpoints": [
+    {
+      "method": "POST",
+      "path": "/adgroups/find",
+      "group": "adgroups",
+      "description": "Find Ad Groups (org-level)"
+    },
+    {
+      "method": "POST",
+      "path": "/ads/find",
+      "group": "ads",
+      "description": "Find Ads (org-level)"
+    },
+    {
+      "method": "POST",
+      "path": "/apps/{adamId}/eligibilities/find",
+      "group": "apps",
+      "description": "Find App Eligibility Records"
+    },
+    {
+      "method": "GET",
+      "path": "/apps/{adamId}/product-pages",
+      "group": "product-pages",
+      "description": "Get Product Pages"
+    },
+    {
+      "method": "GET",
+      "path": "/apps/{adamId}/product-pages/{productPageId}",
+      "group": "product-pages",
+      "description": "Get Product Pages by Identifier"
+    },
+    {
+      "method": "GET",
+      "path": "/apps/{adamId}/product-pages/{productPageId}/locale-details",
+      "group": "product-pages",
+      "description": "Get Product Page Locales"
+    },
+    {
+      "method": "GET",
+      "path": "/budgetorders",
+      "group": "budgetorders",
+      "description": "Get all Budget Orders"
+    },
+    {
+      "method": "POST",
+      "path": "/budgetorders",
+      "group": "budgetorders",
+      "description": "Create a Budget Order"
+    },
+    {
+      "method": "GET",
+      "path": "/budgetorders/{boId}",
+      "group": "budgetorders",
+      "description": "Get a Budget Order"
+    },
+    {
+      "method": "PUT",
+      "path": "/budgetorders/{boId}",
+      "group": "budgetorders",
+      "description": "Update a Budget Order"
+    },
+    {
+      "method": "GET",
+      "path": "/campaigns",
+      "group": "campaigns",
+      "description": "Get all Campaigns"
+    },
+    {
+      "method": "POST",
+      "path": "/campaigns",
+      "group": "campaigns",
+      "description": "Create a Campaign"
+    },
+    {
+      "method": "POST",
+      "path": "/campaigns/find",
+      "group": "campaigns",
+      "description": "Find Campaigns"
+    },
+    {
+      "method": "DELETE",
+      "path": "/campaigns/{campaignId}",
+      "group": "campaigns",
+      "description": "Delete a Campaign"
+    },
+    {
+      "method": "GET",
+      "path": "/campaigns/{campaignId}",
+      "group": "campaigns",
+      "description": "Get a Campaign"
+    },
+    {
+      "method": "PUT",
+      "path": "/campaigns/{campaignId}",
+      "group": "campaigns",
+      "description": "Update a Campaign"
+    },
+    {
+      "method": "GET",
+      "path": "/campaigns/{campaignId}/adgroups",
+      "group": "adgroups",
+      "description": "Get all Ad Groups"
+    },
+    {
+      "method": "POST",
+      "path": "/campaigns/{campaignId}/adgroups",
+      "group": "adgroups",
+      "description": "Create an Ad Group"
+    },
+    {
+      "method": "POST",
+      "path": "/campaigns/{campaignId}/adgroups/find",
+      "group": "adgroups",
+      "description": "Find Ad Groups"
+    },
+    {
+      "method": "POST",
+      "path": "/campaigns/{campaignId}/adgroups/negativekeywords/find",
+      "group": "negatives-adgroup",
+      "description": "Find Ad Group Negative Keywords"
+    },
+    {
+      "method": "POST",
+      "path": "/campaigns/{campaignId}/adgroups/targetingkeywords/find",
+      "group": "keywords",
+      "description": "Find Targeting Keywords in a Campaign"
+    },
+    {
+      "method": "DELETE",
+      "path": "/campaigns/{campaignId}/adgroups/{adgroupId}",
+      "group": "adgroups",
+      "description": "Delete an Ad Group"
+    },
+    {
+      "method": "GET",
+      "path": "/campaigns/{campaignId}/adgroups/{adgroupId}",
+      "group": "adgroups",
+      "description": "Get an Ad Group"
+    },
+    {
+      "method": "PUT",
+      "path": "/campaigns/{campaignId}/adgroups/{adgroupId}",
+      "group": "adgroups",
+      "description": "Update an Ad Group"
+    },
+    {
+      "method": "GET",
+      "path": "/campaigns/{campaignId}/adgroups/{adgroupId}/ads",
+      "group": "ads",
+      "description": "Get All Ads"
+    },
+    {
+      "method": "POST",
+      "path": "/campaigns/{campaignId}/adgroups/{adgroupId}/ads",
+      "group": "ads",
+      "description": "Create an Ad"
+    },
+    {
+      "method": "DELETE",
+      "path": "/campaigns/{campaignId}/adgroups/{adgroupId}/ads/{adId}",
+      "group": "ads",
+      "description": "Delete an Ad"
+    },
+    {
+      "method": "GET",
+      "path": "/campaigns/{campaignId}/adgroups/{adgroupId}/ads/{adId}",
+      "group": "ads",
+      "description": "Get an Ad"
+    },
+    {
+      "method": "PUT",
+      "path": "/campaigns/{campaignId}/adgroups/{adgroupId}/ads/{adId}",
+      "group": "ads",
+      "description": "Update an Ad"
+    },
+    {
+      "method": "GET",
+      "path": "/campaigns/{campaignId}/adgroups/{adgroupId}/negativekeywords",
+      "group": "negatives-adgroup",
+      "description": "Get All Ad Group Negative Keywords"
+    },
+    {
+      "method": "POST",
+      "path": "/campaigns/{campaignId}/adgroups/{adgroupId}/negativekeywords/bulk",
+      "group": "negatives-adgroup",
+      "description": "Create Ad Group Negative Keywords"
+    },
+    {
+      "method": "PUT",
+      "path": "/campaigns/{campaignId}/adgroups/{adgroupId}/negativekeywords/bulk",
+      "group": "negatives-adgroup",
+      "description": "Update Ad Group Negative Keywords"
+    },
+    {
+      "method": "POST",
+      "path": "/campaigns/{campaignId}/adgroups/{adgroupId}/negativekeywords/delete/bulk",
+      "group": "negatives-adgroup",
+      "description": "Delete Ad Group Negative Keywords"
+    },
+    {
+      "method": "GET",
+      "path": "/campaigns/{campaignId}/adgroups/{adgroupId}/negativekeywords/{keywordId}",
+      "group": "negatives-adgroup",
+      "description": "Get an Ad Group Negative Keyword"
+    },
+    {
+      "method": "GET",
+      "path": "/campaigns/{campaignId}/adgroups/{adgroupId}/targetingkeywords",
+      "group": "keywords",
+      "description": "Get All Targeting Keywords in an Ad Group"
+    },
+    {
+      "method": "POST",
+      "path": "/campaigns/{campaignId}/adgroups/{adgroupId}/targetingkeywords/bulk",
+      "group": "keywords",
+      "description": "Create Targeting Keywords"
+    },
+    {
+      "method": "PUT",
+      "path": "/campaigns/{campaignId}/adgroups/{adgroupId}/targetingkeywords/bulk",
+      "group": "keywords",
+      "description": "Update Targeting Keywords"
+    },
+    {
+      "method": "POST",
+      "path": "/campaigns/{campaignId}/adgroups/{adgroupId}/targetingkeywords/delete/bulk",
+      "group": "keywords",
+      "description": "Delete Targeting Keywords"
+    },
+    {
+      "method": "DELETE",
+      "path": "/campaigns/{campaignId}/adgroups/{adgroupId}/targetingkeywords/{keywordId}",
+      "group": "keywords",
+      "description": "Delete a Targeting Keyword"
+    },
+    {
+      "method": "GET",
+      "path": "/campaigns/{campaignId}/adgroups/{adgroupId}/targetingkeywords/{keywordId}",
+      "group": "keywords",
+      "description": "Get a Targeting Keyword in an Ad Group"
+    },
+    {
+      "method": "POST",
+      "path": "/campaigns/{campaignId}/ads/find",
+      "group": "ads",
+      "description": "Find Ads"
+    },
+    {
+      "method": "GET",
+      "path": "/campaigns/{campaignId}/negativekeywords",
+      "group": "negatives-campaign",
+      "description": "Get All Campaign Negative Keywords"
+    },
+    {
+      "method": "POST",
+      "path": "/campaigns/{campaignId}/negativekeywords/bulk",
+      "group": "negatives-campaign",
+      "description": "Create Campaign Negative Keywords"
+    },
+    {
+      "method": "PUT",
+      "path": "/campaigns/{campaignId}/negativekeywords/bulk",
+      "group": "negatives-campaign",
+      "description": "Update Campaign Negative Keywords"
+    },
+    {
+      "method": "POST",
+      "path": "/campaigns/{campaignId}/negativekeywords/delete/bulk",
+      "group": "negatives-campaign",
+      "description": "Delete Campaign Negative Keywords"
+    },
+    {
+      "method": "POST",
+      "path": "/campaigns/{campaignId}/negativekeywords/find",
+      "group": "negatives-campaign",
+      "description": "Find Campaign Negative Keywords"
+    },
+    {
+      "method": "GET",
+      "path": "/campaigns/{campaignId}/negativekeywords/{keywordId}",
+      "group": "negatives-campaign",
+      "description": "Get a Campaign Negative Keyword"
+    },
+    {
+      "method": "GET",
+      "path": "/countries-or-regions",
+      "group": "product-pages",
+      "description": "Get Supported Countries or Regions"
+    },
+    {
+      "method": "GET",
+      "path": "/creativeappmappings/devices",
+      "group": "product-pages",
+      "description": "Get App Preview Device Sizes"
+    },
+    {
+      "method": "GET",
+      "path": "/creatives",
+      "group": "creatives",
+      "description": "Get All Creatives"
+    },
+    {
+      "method": "POST",
+      "path": "/creatives",
+      "group": "creatives",
+      "description": "Create a Creative"
+    },
+    {
+      "method": "POST",
+      "path": "/creatives/find",
+      "group": "creatives",
+      "description": "Find Creatives"
+    },
+    {
+      "method": "GET",
+      "path": "/creatives/{creativeId}",
+      "group": "creatives",
+      "description": "Get a Creative"
+    },
+    {
+      "method": "GET",
+      "path": "/custom-reports",
+      "group": "impression-share",
+      "description": "Get All Impression Share Reports"
+    },
+    {
+      "method": "POST",
+      "path": "/custom-reports",
+      "group": "impression-share",
+      "description": "Impression Share Report"
+    },
+    {
+      "method": "GET",
+      "path": "/custom-reports/{reportId}",
+      "group": "impression-share",
+      "description": "Get a Single Impression Share Report"
+    },
+    {
+      "method": "POST",
+      "path": "/reports/campaigns",
+      "group": "reports",
+      "description": "Get Campaign-Level Reports"
+    },
+    {
+      "method": "POST",
+      "path": "/reports/campaigns/{campaignId}/adgroups",
+      "group": "reports",
+      "description": "Get Ad Group-Level Reports"
+    },
+    {
+      "method": "POST",
+      "path": "/reports/campaigns/{campaignId}/adgroups/{adgroupId}/keywords",
+      "group": "reports",
+      "description": "Get Keyword-Level within Ad Group Reports"
+    },
+    {
+      "method": "POST",
+      "path": "/reports/campaigns/{campaignId}/adgroups/{adgroupId}/searchterms",
+      "group": "reports",
+      "description": "Get Search Term-Level within Ad Group Reports"
+    },
+    {
+      "method": "POST",
+      "path": "/reports/campaigns/{campaignId}/ads",
+      "group": "reports",
+      "description": "Get Ad-Level Reports"
+    },
+    {
+      "method": "POST",
+      "path": "/reports/campaigns/{campaignId}/keywords",
+      "group": "reports",
+      "description": "Get Keyword-Level Reports"
+    },
+    {
+      "method": "POST",
+      "path": "/reports/campaigns/{campaignId}/searchterms",
+      "group": "reports",
+      "description": "Get Search Term-Level Reports"
+    },
+    {
+      "method": "GET",
+      "path": "/search/apps",
+      "group": "apps",
+      "description": "Search for iOS apps"
+    },
+    {
+      "method": "GET",
+      "path": "/search/geo",
+      "group": "geo",
+      "description": "Search for Geolocations"
+    },
+    {
+      "method": "POST",
+      "path": "/search/geo",
+      "group": "geo",
+      "description": "Get a List of Geo Locations"
+    }
+  ],
+  "types": [
+    {
+      "name": "Ad",
+      "group": "ads",
+      "fields": [
+        "adGroupId",
+        "campaignId",
+        "creationTime",
+        "creativeId",
+        "creativeType",
+        "deleted",
+        "id",
+        "modificationTime",
+        "name",
+        "orgId",
+        "servingStateReasons",
+        "servingStatus",
+        "status"
+      ]
+    },
+    {
+      "name": "AdCreate",
+      "group": "ads",
+      "fields": [
+        "adGroupId",
+        "campaignId",
+        "creationTime",
+        "creativeId",
+        "creativeType",
+        "deleted",
+        "id",
+        "modificationTime",
+        "name",
+        "orgId",
+        "servingStateReasons",
+        "servingStatus",
+        "status"
+      ]
+    },
+    {
+      "name": "AdGroup",
+      "group": "adgroups",
+      "fields": [
+        "automatedKeywordsOptIn",
+        "automatedKeywordsRequired",
+        "biddingStrategy",
+        "campaignId",
+        "cpaGoal",
+        "defaultBidAmount",
+        "deleted",
+        "displayStatus",
+        "endTime",
+        "id",
+        "modificationTime",
+        "name",
+        "orgId",
+        "paymentModel",
+        "pricingModel",
+        "servingStateReasons",
+        "servingStatus",
+        "startTime",
+        "status",
+        "targetingDimensions"
+      ]
+    },
+    {
+      "name": "AdGroupListResponse",
+      "group": "adgroups",
+      "fields": [
+        "data",
+        "error",
+        "pagination"
+      ]
+    },
+    {
+      "name": "AdGroupResponse",
+      "group": "adgroups",
+      "fields": [
+        "data",
+        "error",
+        "pagination"
+      ]
+    },
+    {
+      "name": "AdGroupUpdate",
+      "group": "adgroups",
+      "fields": [
+        "automatedKeywordsOptIn",
+        "cpaGoal",
+        "defaultBidAmount",
+        "endTime",
+        "name",
+        "startTime",
+        "status",
+        "targetingDimensions"
+      ]
+    },
+    {
+      "name": "AdListResponse",
+      "group": "ads",
+      "fields": [
+        "data",
+        "pagination"
+      ]
+    },
+    {
+      "name": "AdResponse",
+      "group": "ads",
+      "fields": [
+        "data"
+      ]
+    },
+    {
+      "name": "AdUpdate",
+      "group": "ads",
+      "fields": [
+        "creativeId",
+        "adGroupId",
+        "campaignId",
+        "creationTime",
+        "creativeType",
+        "deleted",
+        "id",
+        "modificationTime",
+        "name",
+        "orgId",
+        "servingStateReasons",
+        "servingStatus",
+        "status"
+      ]
+    },
+    {
+      "name": "AdminAreaCriteria",
+      "group": "ads",
+      "fields": [
+        "included"
+      ]
+    },
+    {
+      "name": "AgeCriteria",
+      "group": "common",
+      "fields": [
+        "included"
+      ]
+    },
+    {
+      "name": "AgeRange",
+      "group": "common",
+      "fields": [
+        "maxAge",
+        "minAge"
+      ]
+    },
+    {
+      "name": "ApiErrorResponse",
+      "group": "common",
+      "fields": [
+        "error"
+      ]
+    },
+    {
+      "name": "AppCategoryCriteria",
+      "group": "apps",
+      "fields": [
+        "excluded",
+        "included"
+      ]
+    },
+    {
+      "name": "AppDownloaderCriteria",
+      "group": "apps",
+      "fields": [
+        "excluded",
+        "included"
+      ]
+    },
+    {
+      "name": "AppInfo",
+      "group": "apps",
+      "fields": [
+        "adamId",
+        "appName",
+        "countryOrRegionCodes",
+        "developerName"
+      ]
+    },
+    {
+      "name": "AppInfoListResponse",
+      "group": "apps",
+      "fields": [
+        "data",
+        "error",
+        "pagination"
+      ]
+    },
+    {
+      "name": "AppPreviewDevicesMappingResponse",
+      "group": "product-pages",
+      "fields": [
+        "data"
+      ]
+    },
+    {
+      "name": "AppPreviewDevicesMappingResponse.Data",
+      "group": "product-pages",
+      "fields": [
+        "Any Key"
+      ]
+    },
+    {
+      "name": "BudgetOrder",
+      "group": "budgetorders",
+      "fields": [
+        "billingEmail",
+        "budget",
+        "clientName",
+        "endDate",
+        "id",
+        "name",
+        "orderNumber",
+        "parentOrgId",
+        "primaryBuyerEmail",
+        "primaryBuyerName",
+        "startDate",
+        "status",
+        "supplySources"
+      ]
+    },
+    {
+      "name": "BudgetOrderCreate",
+      "group": "budgetorders",
+      "fields": [
+        "bo",
+        "orgIds"
+      ]
+    },
+    {
+      "name": "BudgetOrderCreate.Bo",
+      "group": "budgetorders",
+      "fields": [
+        "billingEmail",
+        "budget",
+        "clientName",
+        "endDate",
+        "name",
+        "orderNumber",
+        "primaryBuyerEmail",
+        "primaryBuyerName",
+        "startDate",
+        "supplySources"
+      ]
+    },
+    {
+      "name": "BudgetOrderInfo",
+      "group": "budgetorders",
+      "fields": [
+        "bo",
+        "orgIds"
+      ]
+    },
+    {
+      "name": "BudgetOrderInfoListResponse",
+      "group": "budgetorders",
+      "fields": [
+        "data",
+        "error",
+        "pagination"
+      ]
+    },
+    {
+      "name": "BudgetOrderInfoResponse",
+      "group": "budgetorders",
+      "fields": [
+        "data",
+        "error",
+        "pagination"
+      ]
+    },
+    {
+      "name": "BudgetOrderUpdate",
+      "group": "budgetorders",
+      "fields": [
+        "bo",
+        "orgIds"
+      ]
+    },
+    {
+      "name": "BudgetOrderUpdate.Bo",
+      "group": "budgetorders",
+      "fields": [
+        "billingEmail",
+        "budget",
+        "clientName",
+        "endDate",
+        "name",
+        "orderNumber",
+        "primaryBuyerEmail",
+        "primaryBuyerName",
+        "startDate"
+      ]
+    },
+    {
+      "name": "Campaign",
+      "group": "campaigns",
+      "fields": [
+        "adamId",
+        "adChannelType",
+        "billingEvent",
+        "biddingStrategy",
+        "budgetAmount",
+        "budgetOrders",
+        "countriesOrRegions",
+        "countryOrRegionServingStateReasons",
+        "creationTime",
+        "dailyBudgetAmount",
+        "deleted",
+        "displayStatus",
+        "endTime",
+        "id",
+        "locInvoiceDetails",
+        "modificationTime",
+        "name",
+        "orgId",
+        "paymentModel",
+        "servingStateReasons",
+        "servingStatus",
+        "startTime",
+        "status",
+        "supplySources",
+        "targetCpa"
+      ]
+    },
+    {
+      "name": "Campaign.CountryOrRegionServingStateReasons",
+      "group": "campaigns",
+      "fields": [
+        "Any Key"
+      ]
+    },
+    {
+      "name": "CampaignListResponse",
+      "group": "campaigns",
+      "fields": [
+        "data",
+        "error",
+        "pagination"
+      ]
+    },
+    {
+      "name": "CampaignResponse",
+      "group": "campaigns",
+      "fields": [
+        "data",
+        "error",
+        "pagination"
+      ]
+    },
+    {
+      "name": "CampaignUpdate",
+      "group": "campaigns",
+      "fields": [
+        "biddingStrategy",
+        "budgetAmount",
+        "budgetOrders",
+        "countriesOrRegions",
+        "dailyBudgetAmount",
+        "locInvoiceDetails",
+        "name",
+        "status",
+        "targetCpa"
+      ]
+    },
+    {
+      "name": "Condition",
+      "group": "common",
+      "fields": [
+        "field",
+        "ignoreCase",
+        "operator",
+        "values"
+      ]
+    },
+    {
+      "name": "CountriesOrRegionsListResponse",
+      "group": "product-pages",
+      "fields": [
+        "data"
+      ]
+    },
+    {
+      "name": "CountryCriteria",
+      "group": "common",
+      "fields": [
+        "included"
+      ]
+    },
+    {
+      "name": "CountryOrRegion",
+      "group": "common",
+      "fields": [
+        "countryOrRegion",
+        "defaultLanguages",
+        "supportedLanguages"
+      ]
+    },
+    {
+      "name": "CreativeListResponse",
+      "group": "creatives",
+      "fields": [
+        "data",
+        "pagination"
+      ]
+    },
+    {
+      "name": "CreativeResponse",
+      "group": "creatives",
+      "fields": [
+        "data"
+      ]
+    },
+    {
+      "name": "CustomProductPageCreative",
+      "group": "creatives",
+      "fields": [
+        "productPageId",
+        "adamId",
+        "creationTime",
+        "id",
+        "modificationTime",
+        "name",
+        "orgId",
+        "state",
+        "stateReasons",
+        "type"
+      ]
+    },
+    {
+      "name": "CustomReportRequest",
+      "group": "impression-share",
+      "fields": [
+        "dateRange",
+        "endTime",
+        "granularity",
+        "name",
+        "selector",
+        "startTime"
+      ]
+    },
+    {
+      "name": "CustomReportRequest.Selector",
+      "group": "impression-share",
+      "fields": [
+        "conditions"
+      ]
+    },
+    {
+      "name": "CustomReportRequest.Selector.Conditions",
+      "group": "impression-share",
+      "fields": []
+    },
+    {
+      "name": "CustomReportResponse",
+      "group": "impression-share",
+      "fields": [
+        "creationTime",
+        "dimensions",
+        "downloadUri",
+        "endTime",
+        "granularity",
+        "id",
+        "metrics",
+        "modificationTime",
+        "name",
+        "selector",
+        "startTime",
+        "state"
+      ]
+    },
+    {
+      "name": "CustomReportResponse.Selector",
+      "group": "impression-share",
+      "fields": [
+        "conditions"
+      ]
+    },
+    {
+      "name": "CustomReportResponse.Selector.Conditions",
+      "group": "impression-share",
+      "fields": []
+    },
+    {
+      "name": "CustomReportResponseBody",
+      "group": "impression-share",
+      "fields": [
+        "data",
+        "error",
+        "pagination"
+      ]
+    },
+    {
+      "name": "DaypartCriteria",
+      "group": "common",
+      "fields": [
+        "userTime"
+      ]
+    },
+    {
+      "name": "DaypartDetail",
+      "group": "common",
+      "fields": [
+        "included"
+      ]
+    },
+    {
+      "name": "DeviceClassCriteria",
+      "group": "common",
+      "fields": [
+        "included"
+      ]
+    },
+    {
+      "name": "EligibilityRecord",
+      "group": "apps",
+      "fields": [
+        "adamId",
+        "countryOrRegion",
+        "deviceClass",
+        "minAge",
+        "state",
+        "supplySource"
+      ]
+    },
+    {
+      "name": "EligibilityRecordListResponse",
+      "group": "apps",
+      "fields": [
+        "data",
+        "pagination"
+      ]
+    },
+    {
+      "name": "ErrorResponseBody",
+      "group": "common",
+      "fields": [
+        "errors"
+      ]
+    },
+    {
+      "name": "ErrorResponseItem",
+      "group": "common",
+      "fields": [
+        "field",
+        "message",
+        "messageCode"
+      ]
+    },
+    {
+      "name": "ExtendedSpendRow",
+      "group": "common",
+      "fields": [
+        "avgCPM",
+        "avgCPT",
+        "date",
+        "impressions",
+        "localSpend",
+        "tapInstallCPI",
+        "tapInstallRate",
+        "tapInstalls",
+        "tapNewDownloads",
+        "tapRedownloads",
+        "taps",
+        "tapPreOrdersPlaced",
+        "totalAvgCPI",
+        "totalInstallRate",
+        "totalInstalls",
+        "totalNewDownloads",
+        "totalRedownloads",
+        "totalPreOrdersPlaced",
+        "ttr",
+        "viewInstalls",
+        "viewNewDownloads",
+        "viewPreOrdersPlaced",
+        "viewRedownloads"
+      ]
+    },
+    {
+      "name": "GenderCriteria",
+      "group": "common",
+      "fields": [
+        "included"
+      ]
+    },
+    {
+      "name": "GrandTotalsRow",
+      "group": "common",
+      "fields": [
+        "other",
+        "total"
+      ]
+    },
+    {
+      "name": "InsightsObject",
+      "group": "common",
+      "fields": []
+    },
+    {
+      "name": "IntegerResponse",
+      "group": "common",
+      "fields": [
+        "data",
+        "error",
+        "pagination"
+      ]
+    },
+    {
+      "name": "Keyword",
+      "group": "keywords",
+      "fields": [
+        "adGroupId",
+        "bidAmount",
+        "campaignId",
+        "creationTime",
+        "deleted",
+        "id",
+        "matchType",
+        "modificationTime",
+        "status",
+        "text"
+      ]
+    },
+    {
+      "name": "KeywordListResponse",
+      "group": "keywords",
+      "fields": [
+        "data",
+        "error",
+        "pagination"
+      ]
+    },
+    {
+      "name": "KeywordResponse",
+      "group": "keywords",
+      "fields": [
+        "data",
+        "error",
+        "pagination"
+      ]
+    },
+    {
+      "name": "LOCInvoiceDetails",
+      "group": "common",
+      "fields": [
+        "billingContactEmail",
+        "buyerEmail",
+        "buyerName",
+        "clientName",
+        "orderNumber"
+      ]
+    },
+    {
+      "name": "LocaleInfo",
+      "group": "common",
+      "fields": [
+        "language",
+        "languageCode"
+      ]
+    },
+    {
+      "name": "LocalityCriteria",
+      "group": "common",
+      "fields": [
+        "included"
+      ]
+    },
+    {
+      "name": "MediaAppAsset",
+      "group": "apps",
+      "fields": [
+        "assetGenId",
+        "assetType",
+        "assetURL",
+        "orientation",
+        "sortPosition",
+        "sourceHeight",
+        "sourceWidth"
+      ]
+    },
+    {
+      "name": "MediaAppAssetsDetail",
+      "group": "apps",
+      "fields": [
+        "appPreviewDeviceFallBackDevices",
+        "appPreviews",
+        "screenshots"
+      ]
+    },
+    {
+      "name": "MediaAppVideoAsset",
+      "group": "apps",
+      "fields": [
+        "assetGenId",
+        "assetType",
+        "assetURL",
+        "assetVideoURL",
+        "orientation",
+        "sortPosition",
+        "sourceHeight",
+        "sourceWidth"
+      ]
+    },
+    {
+      "name": "MetaDataObject",
+      "group": "common",
+      "fields": []
+    },
+    {
+      "name": "Money",
+      "group": "common",
+      "fields": [
+        "amount",
+        "currency"
+      ]
+    },
+    {
+      "name": "NegativeKeyword",
+      "group": "negatives",
+      "fields": [
+        "adGroupId",
+        "campaignId",
+        "deleted",
+        "id",
+        "matchType",
+        "modificationTime",
+        "status",
+        "text"
+      ]
+    },
+    {
+      "name": "NegativeKeywordListResponse",
+      "group": "negatives",
+      "fields": [
+        "data",
+        "error",
+        "pagination"
+      ]
+    },
+    {
+      "name": "NegativeKeywordResponse",
+      "group": "negatives",
+      "fields": [
+        "data",
+        "error",
+        "pagination"
+      ]
+    },
+    {
+      "name": "PageDetail",
+      "group": "common",
+      "fields": [
+        "itemsPerPage",
+        "startIndex",
+        "totalResults"
+      ]
+    },
+    {
+      "name": "Pagination",
+      "group": "common",
+      "fields": [
+        "limit",
+        "offset"
+      ]
+    },
+    {
+      "name": "ProductPageDetail",
+      "group": "product-pages",
+      "fields": [
+        "adamId",
+        "creationTime",
+        "deepLink",
+        "id",
+        "modificationTime",
+        "name",
+        "state"
+      ]
+    },
+    {
+      "name": "ProductPageDetailListResponse",
+      "group": "product-pages",
+      "fields": [
+        "data"
+      ]
+    },
+    {
+      "name": "ProductPageDetailResponse",
+      "group": "product-pages",
+      "fields": [
+        "data"
+      ]
+    },
+    {
+      "name": "ProductPageLocaleDetail",
+      "group": "product-pages",
+      "fields": [
+        "adamId",
+        "appName",
+        "appPreviewDeviceWithAssets",
+        "deviceClasses",
+        "language",
+        "languageCode",
+        "productPageId",
+        "promotionalText",
+        "shortDescription",
+        "subTitle"
+      ]
+    },
+    {
+      "name": "ProductPageLocaleDetail.AppPreviewDeviceWithAssets",
+      "group": "product-pages",
+      "fields": [
+        "Any Key"
+      ]
+    },
+    {
+      "name": "ProductPageLocaleDetail.AppPreviewDeviceWithAssets.Any Key",
+      "group": "product-pages",
+      "fields": [
+        "appPreviewDevice",
+        "mediaAppPreviewOrScreenshotsDetail"
+      ]
+    },
+    {
+      "name": "ProductPageLocaleDetailListResponse",
+      "group": "product-pages",
+      "fields": [
+        "data"
+      ]
+    },
+    {
+      "name": "ReportingDataResponse",
+      "group": "reports",
+      "fields": [
+        "grandTotals",
+        "row"
+      ]
+    },
+    {
+      "name": "ReportingRequest",
+      "group": "reports",
+      "fields": [
+        "endTime",
+        "granularity",
+        "groupBy",
+        "returnGrandTotals",
+        "returnRecordsWithNoMetrics",
+        "returnRowTotals",
+        "selector",
+        "startTime",
+        "timeZone"
+      ]
+    },
+    {
+      "name": "ReportingResponse",
+      "group": "reports",
+      "fields": [
+        "reportingDataResponse"
+      ]
+    },
+    {
+      "name": "ReportingResponseBody",
+      "group": "reports",
+      "fields": [
+        "data",
+        "error",
+        "pagination"
+      ]
+    },
+    {
+      "name": "Row",
+      "group": "common",
+      "fields": [
+        "insights",
+        "granularity",
+        "metadata",
+        "other",
+        "total"
+      ]
+    },
+    {
+      "name": "SearchEntity",
+      "group": "geo",
+      "fields": [
+        "adminArea",
+        "countryOrRegion",
+        "displayName",
+        "entity",
+        "id",
+        "locality"
+      ]
+    },
+    {
+      "name": "SearchEntityListResponse",
+      "group": "geo",
+      "fields": [
+        "data",
+        "error",
+        "pagination"
+      ]
+    },
+    {
+      "name": "Selector",
+      "group": "common",
+      "fields": [
+        "conditions",
+        "fields",
+        "orderBy",
+        "pagination"
+      ]
+    },
+    {
+      "name": "Sorting",
+      "group": "common",
+      "fields": [
+        "field",
+        "ignoreCase",
+        "sortOrder"
+      ]
+    },
+    {
+      "name": "SpendRow",
+      "group": "common",
+      "fields": [
+        "avgCPM",
+        "avgCPT",
+        "impressions",
+        "localSpend",
+        "tapInstallCPI",
+        "tapInstallRate",
+        "tapInstalls",
+        "tapNewDownloads",
+        "tapRedownloads",
+        "taps",
+        "tapPreOrdersPlaced",
+        "totalAvgCPI",
+        "totalInstallRate",
+        "totalInstalls",
+        "totalNewDownloads",
+        "totalRedownloads",
+        "totalPreOrdersPlaced",
+        "ttr",
+        "viewInstalls",
+        "viewNewDownloads",
+        "viewPreOrdersPlaced",
+        "viewRedownloads"
+      ]
+    },
+    {
+      "name": "TargetingDimensions",
+      "group": "common",
+      "fields": [
+        "adminArea",
+        "age",
+        "appCategories",
+        "appDownloaders",
+        "country",
+        "daypart",
+        "deviceClass",
+        "gender",
+        "locality"
+      ]
+    },
+    {
+      "name": "UpdateCampaignRequest",
+      "group": "campaigns",
+      "fields": [
+        "campaign",
+        "clearGeoTargetingOnCountryOrRegionChange"
+      ]
+    },
+    {
+      "name": "VoidResponse",
+      "group": "common",
+      "fields": [
+        "data",
+        "error",
+        "pagination"
+      ]
+    },
+    {
+      "name": "VoidResponse.Data",
+      "group": "common",
+      "fields": []
+    },
+    {
+      "name": "_",
+      "group": "common",
+      "fields": []
+    },
+    {
+      "name": "[int64]",
+      "group": "common",
+      "fields": []
+    }
+  ]
+}

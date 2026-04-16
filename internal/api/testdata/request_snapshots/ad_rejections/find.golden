@@ -1,0 +1,41 @@
+POST https://api.searchads.apple.com/api/v5/product-page-reasons/find
+Accept: application/json
+Authorization: Bearer token
+Content-Type: application/json
+Host: api.searchads.apple.com
+X-AP-Context: orgId=12345
+
+{
+  "conditions": [
+    {
+      "field": "reasonType",
+      "operator": "EQUALS",
+      "values": [
+        "REJECTION_REASON"
+      ]
+    },
+    {
+      "field": "reasonCode",
+      "operator": "IN",
+      "values": [
+        "APP_ICON_GRAPHIC_OR_ADULT_THEMED_CONTENT",
+        "APP_NAME_GRAPHIC_OR_ADULT_THEMED_CONTENT",
+        "SUBTITLE_GRAPHIC_OR_ADULT_THEMED_CONTENT"
+      ]
+    }
+  ],
+  "fields": [
+    "id",
+    "comment"
+  ],
+  "orderBy": [
+    {
+      "field": "languageCode",
+      "sortOrder": "ASCENDING"
+    }
+  ],
+  "pagination": {
+    "limit": 20,
+    "offset": 40
+  }
+}
