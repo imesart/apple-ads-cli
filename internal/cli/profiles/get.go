@@ -31,6 +31,10 @@ Example:
   aads profiles get --name work --show-key`,
 		FlagSet: fs,
 		Exec: func(ctx context.Context, args []string) error {
+			if *showCreds && *showKey {
+				return shared.ValidationError("only one of --show-credentials or --show-key may be used")
+			}
+
 			cf := config.LoadFile()
 
 			if len(cf.Profiles) == 0 {
@@ -50,9 +54,6 @@ Example:
 				return shared.ReportError(fmt.Errorf("profile %q not found", profileName))
 			}
 
-			if *showCreds && *showKey {
-				return shared.ValidationError("only one of --show-credentials or --show-key may be used")
-			}
 			if *showKey {
 				privateKeyPath := expandUserPath(strings.TrimSpace(p.PrivateKeyPath))
 				if privateKeyPath == "" {
