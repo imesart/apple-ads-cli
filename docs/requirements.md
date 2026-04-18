@@ -147,8 +147,10 @@ Environment variables override stored config values.
 
 ### Profile setup
 
-`aads profiles create --name <name>` creates a named profile in `~/.aads/config.yaml` from credentials passed via flags.
+`aads profiles genkey --name <name>` generates a P-256 private key at `~/.aads/keys/<name>-private-key.pem` and prints the corresponding public key to stdout.
+`aads profiles create --name <name>` creates a named profile in `~/.aads/config.yaml` from credentials passed via flags. When `--private-key-path` is omitted, it stores the default key path `~/.aads/keys/<name>-private-key.pem`.
 `aads profiles update --name <name>` updates an existing profile.
+`aads profiles get --name <name> --show-key` prints the configured profile public key instead of profile details.
 
 ## Command Structure
 
@@ -269,6 +271,7 @@ aads structure import      Import campaigns/ad groups, keywords, and negatives f
 
 aads profiles list         List all configured profiles
 aads profiles get          Show profile details
+aads profiles genkey       Generate a P-256 private key and print its public key
 aads profiles create       Create a new profile
 aads profiles update       Update an existing profile
 aads profiles delete       Delete a profile
@@ -279,7 +282,7 @@ aads schema                Query embedded API schema information
 aads completion <shell>    Generate shell completion (bash, zsh, fish)
 ```
 
-**Total: 68 commands across 19 command groups.**
+**Total: 69 commands across 19 command groups.**
 
 For per-endpoint implementation status and source file mapping, see [`docs/coverage.md`](coverage.md).
 

@@ -2336,6 +2336,7 @@ USAGE
 SUBCOMMANDS
   list         List all configured profiles.
   get          Show profile details.
+  genkey       Generate a P-256 private key and print its public key.
   create       Create a new profile.
   update       Update an existing profile.
   delete       Delete a profile.
@@ -2362,19 +2363,48 @@ Show profile details.
 
 ```
 USAGE
-  aads profiles get [--name NAME] [--show-credentials]
+  aads profiles get [--name NAME] [--show-credentials | --show-key]
 
 Show details for a profile. Without --name, shows the current default profile.
 
 Example:
   aads profiles get
   aads profiles get --name work
+  aads profiles get --name work --show-key
 ```
 
 ```
 FLAGS
   -name string             Profile name (default current default profile)
   -show-credentials=false  Show client ID, team ID, key ID, and private key path
+  -show-key=false          Print the profile public key
+```
+
+### profiles genkey
+
+Generate a P-256 private key and print its public key.
+
+```
+USAGE
+  aads profiles genkey --name NAME [--confirm]
+
+Generate a P-256 (ES256) private key using openssl and print the
+corresponding public key to stdout. The private key path is always:
+
+  ~/.aads/keys/NAME-private-key.pem
+
+If NAME matches an existing profile, the command updates that profile's
+private_key_path after successful generation.
+
+Example:
+  aads profiles genkey --name default
+  aads profiles genkey --name work --confirm
+```
+
+```
+FLAGS
+  -confirm=false  Overwrite the existing private key file
+  -name string    Profile name or key name (required)
 ```
 
 ### profiles create
@@ -2394,8 +2424,8 @@ creates the profile as long as org_id was resolved. If this is the first
 profile, it becomes the default automatically.
 
 Example:
-  aads profiles create --name default --client-id SEARCHADS.abc --team-id SEARCHADS.abc --key-id abc --org-id 123 --private-key-path ~/.aads/key.pem
-  aads profiles create --name work --client-id SEARCHADS.def --org-id 456 --private-key-path ~/.aads/work.pem
+  aads profiles create --name default --client-id SEARCHADS.abc --team-id SEARCHADS.abc --key-id abc --org-id 123
+  aads profiles create --name work --client-id SEARCHADS.def --team-id SEARCHADS.def --key-id def --org-id 456 --private-key-path ~/.aads/keys/work-private-key.pem
 
 Time defaults apply to mutation time flags like --start-time and --end-time.
 If default_timezone is empty, the local machine timezone is used. If

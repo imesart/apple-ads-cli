@@ -3,7 +3,12 @@ package cmd
 import (
 	"bytes"
 	"context"
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/rand"
+	"crypto/x509"
 	"encoding/json"
+	"encoding/pem"
 	"flag"
 	"fmt"
 	"io"
@@ -16,6 +21,7 @@ import (
 
 	"github.com/imesart/apple-ads-cli/internal/api"
 	apiPkg "github.com/imesart/apple-ads-cli/internal/api"
+	profilescli "github.com/imesart/apple-ads-cli/internal/cli/profiles"
 	"github.com/imesart/apple-ads-cli/internal/cli/shared"
 	"github.com/imesart/apple-ads-cli/internal/config"
 )
@@ -1932,6 +1938,50 @@ func TestRun_ProfilesCreate_UsesConfigDirFlag(t *testing.T) {
 	if !strings.Contains(string(data), `org_id: "123"`) {
 		t.Fatalf("config file missing org_id: %s", data)
 	}
+	wantKeyPath := filepath.Join(configDir, "keys", "test-private-key.pem")
+	if !strings.Contains(string(data), "private_key_path: "+wantKeyPath) {
+		t.Fatalf("config file missing default private_key_path %q: %s", wantKeyPath, data)
+	}
+	if !strings.Contains(out, fmt.Sprintf("Warning: private key file %q does not exist.", wantKeyPath)) {
+		t.Fatalf("output missing default private-key warning: %q", out)
+	}
+	if !strings.Contains(out, `This is the default key path for profile "test".`) {
+		t.Fatalf("output missing default key-path explanation: %q", out)
+	}
+	if !strings.Contains(out, "aads profiles genkey --name test") {
+		t.Fatalf("output missing genkey guidance: %q", out)
+	}
+	if !strings.Contains(out, "--private-key-path") {
+		t.Fatalf("output missing private-key-path guidance: %q", out)
+	}
+}
+
+func TestRun_ProfilesCreate_ExplicitPrivateKeyPathWarningExplainsOverride(t *testing.T) {
+	configDir := filepath.Join(t.TempDir(), "config")
+	t.Setenv("AADS_CONFIG_DIR", configDir)
+
+	missingKeyPath := filepath.Join(t.TempDir(), "missing", "custom.pem")
+	out, code := captureRun(t, []string{
+		"profiles", "create",
+		"--name", "work",
+		"--org-id", "123",
+		"--private-key-path", missingKeyPath,
+	}, "")
+	if code != ExitSuccess {
+		t.Fatalf("exit code = %d, want %d; output=%q", code, ExitSuccess, out)
+	}
+	if !strings.Contains(out, fmt.Sprintf("Warning: private key file %q does not exist.", missingKeyPath)) {
+		t.Fatalf("output missing explicit private-key warning: %q", out)
+	}
+	if strings.Contains(out, "This is the default key path") {
+		t.Fatalf("explicit private-key-path warning should not claim default path: %q", out)
+	}
+	if !strings.Contains(out, "aads profiles genkey --name work") {
+		t.Fatalf("output missing genkey guidance: %q", out)
+	}
+	if !strings.Contains(out, "--private-key-path") {
+		t.Fatalf("output missing override guidance: %q", out)
+	}
 }
 
 func TestRun_ProfilesList_UsesConfigDirEnv(t *testing.T) {
@@ -1959,6 +2009,171 @@ profiles:
 	}
 	if !strings.Contains(out, "work") {
 		t.Fatalf("profiles list output missing profile from config-dir override: %q", out)
+	}
+}
+
+func TestRun_ProfilesGet_ShowKey(t *testing.T) {
+	configDir := filepath.Join(t.TempDir(), "config")
+	homeDir := filepath.Join(t.TempDir(), "home")
+	keyPath := filepath.Join(homeDir, ".aads", "work.pem")
+	if err := os.MkdirAll(filepath.Dir(keyPath), 0o700); err != nil {
+		t.Fatalf("MkdirAll(%q): %v", filepath.Dir(keyPath), err)
+	}
+	if err := os.WriteFile(keyPath, generateTestECPrivateKey(t), 0o600); err != nil {
+		t.Fatalf("WriteFile(%q): %v", keyPath, err)
+	}
+	configPath := filepath.Join(configDir, "config.yaml")
+	if err := os.MkdirAll(configDir, 0o700); err != nil {
+		t.Fatalf("MkdirAll(%q): %v", configDir, err)
+	}
+	if err := os.WriteFile(configPath, []byte(`
+default_profile: work
+profiles:
+  work:
+    client_id: work-client
+    team_id: work-team
+    key_id: work-key
+    private_key_path: ~/.aads/work.pem
+`), 0o600); err != nil {
+		t.Fatalf("WriteFile(%q): %v", configPath, err)
+	}
+	t.Setenv("AADS_CONFIG_DIR", configDir)
+	t.Setenv("HOME", homeDir)
+
+	out, code := captureRun(t, []string{"profiles", "get", "--name", "work", "--show-key"}, "")
+	if code != ExitSuccess {
+		t.Fatalf("exit code = %d, want %d; output=%q", code, ExitSuccess, out)
+	}
+	if !strings.Contains(out, "BEGIN PUBLIC KEY") {
+		t.Fatalf("show-key output missing public key PEM: %q", out)
+	}
+	if strings.Contains(out, "work-client") {
+		t.Fatalf("show-key should not render profile details: %q", out)
+	}
+}
+
+func TestRun_ProfilesGet_ShowKey_RejectsShowCredentials(t *testing.T) {
+	out, code := captureRun(t, []string{"profiles", "get", "--show-key", "--show-credentials"}, "")
+	if code != ExitUsage {
+		t.Fatalf("exit code = %d, want %d; output=%q", code, ExitUsage, out)
+	}
+	if !strings.Contains(out, "only one of --show-credentials or --show-key may be used") {
+		t.Fatalf("unexpected output: %q", out)
+	}
+}
+
+func TestRun_ProfilesGenkey_ExistingFileRequiresConfirm(t *testing.T) {
+	configDir := filepath.Join(t.TempDir(), "config")
+	keyPath := filepath.Join(configDir, "keys", "work-private-key.pem")
+	if err := os.MkdirAll(filepath.Dir(keyPath), 0o700); err != nil {
+		t.Fatalf("MkdirAll(%q): %v", filepath.Dir(keyPath), err)
+	}
+	if err := os.WriteFile(keyPath, generateTestECPrivateKey(t), 0o600); err != nil {
+		t.Fatalf("WriteFile(%q): %v", keyPath, err)
+	}
+	t.Setenv("AADS_CONFIG_DIR", configDir)
+
+	out, code := captureRun(t, []string{"profiles", "genkey", "--name", "work"}, "")
+	if code != ExitError {
+		t.Fatalf("exit code = %d, want %d; output=%q", code, ExitError, out)
+	}
+	if !strings.Contains(out, "BEGIN PUBLIC KEY") {
+		t.Fatalf("existing-key failure should still print public key: %q", out)
+	}
+	if !strings.Contains(out, "already exists; rerun with --confirm to overwrite") {
+		t.Fatalf("unexpected output: %q", out)
+	}
+}
+
+func TestRun_ProfilesGenkey_UpdatesExistingProfileAndWarnsOnReplacingConfiguredKey(t *testing.T) {
+	configDir := filepath.Join(t.TempDir(), "config")
+	oldKeyPath := filepath.Join(t.TempDir(), "old", "existing.pem")
+	if err := os.MkdirAll(filepath.Dir(oldKeyPath), 0o700); err != nil {
+		t.Fatalf("MkdirAll(%q): %v", filepath.Dir(oldKeyPath), err)
+	}
+	if err := os.WriteFile(oldKeyPath, generateTestECPrivateKey(t), 0o600); err != nil {
+		t.Fatalf("WriteFile(%q): %v", oldKeyPath, err)
+	}
+	configPath := filepath.Join(configDir, "config.yaml")
+	if err := os.MkdirAll(configDir, 0o700); err != nil {
+		t.Fatalf("MkdirAll(%q): %v", configDir, err)
+	}
+	if err := os.WriteFile(configPath, []byte(fmt.Sprintf(`
+default_profile: work
+profiles:
+  work:
+    client_id: work-client
+    team_id: work-team
+    key_id: work-key
+    private_key_path: %s
+`, oldKeyPath)), 0o600); err != nil {
+		t.Fatalf("WriteFile(%q): %v", configPath, err)
+	}
+	t.Setenv("AADS_CONFIG_DIR", configDir)
+
+	restore := profilescli.SetKeygenFuncsForTesting(
+		func(string) (string, error) { return "/usr/bin/openssl", nil },
+		func(_ context.Context, name string, args ...string) ([]byte, error) {
+			if name != "openssl" {
+				t.Fatalf("unexpected command name: %s", name)
+			}
+			if len(args) < 7 || args[0] != "ecparam" || args[5] != "-out" {
+				t.Fatalf("unexpected openssl args: %v", args)
+			}
+			if err := os.WriteFile(args[6], generateTestECPrivateKey(t), 0o600); err != nil {
+				t.Fatalf("WriteFile(%q): %v", args[6], err)
+			}
+			return nil, nil
+		},
+	)
+	defer restore()
+
+	out, code := captureRun(t, []string{"profiles", "genkey", "--name", "work"}, "")
+	if code != ExitSuccess {
+		t.Fatalf("exit code = %d, want %d; output=%q", code, ExitSuccess, out)
+	}
+	if !strings.Contains(out, "BEGIN PUBLIC KEY") {
+		t.Fatalf("genkey output missing public key: %q", out)
+	}
+	if !strings.Contains(out, `Warning: profile "work" currently points to existing key file`) {
+		t.Fatalf("expected replacement warning: %q", out)
+	}
+	if !strings.Contains(out, `Profile "work" updated in `) {
+		t.Fatalf("expected profile update message: %q", out)
+	}
+
+	data, err := os.ReadFile(configPath)
+	if err != nil {
+		t.Fatalf("ReadFile(%q): %v", configPath, err)
+	}
+	wantPath := filepath.Join(configDir, "keys", "work-private-key.pem")
+	if !strings.Contains(string(data), "private_key_path: "+wantPath) {
+		t.Fatalf("config file missing updated private key path %q: %s", wantPath, data)
+	}
+	if _, err := os.Stat(wantPath); err != nil {
+		t.Fatalf("generated key file missing at %q: %v", wantPath, err)
+	}
+}
+
+func TestRun_ProfilesGenkey_MissingOpenSSL(t *testing.T) {
+	configDir := filepath.Join(t.TempDir(), "config")
+	t.Setenv("AADS_CONFIG_DIR", configDir)
+
+	restore := profilescli.SetKeygenFuncsForTesting(
+		func(string) (string, error) { return "", fmt.Errorf("not found") },
+		nil,
+	)
+	defer restore()
+
+	out, code := captureRun(t, []string{"profiles", "genkey", "--name", "work"}, "")
+	if code != ExitError {
+		t.Fatalf("exit code = %d, want %d; output=%q", code, ExitError, out)
+	}
+	if !strings.Contains(out, "openssl is required for 'aads profiles genkey'") {
+		t.Fatalf("unexpected output: %q", out)
+	}
+	if !strings.Contains(out, "brew install openssl") {
+		t.Fatalf("missing Homebrew install hint: %q", out)
 	}
 }
 
@@ -2264,4 +2479,20 @@ func captureRun(t *testing.T, args []string, stdin string) (string, int) {
 	stdoutBytes := <-stdoutCh
 	stderrBytes := <-stderrCh
 	return string(stdoutBytes) + string(stderrBytes), code
+}
+
+func generateTestECPrivateKey(t *testing.T) []byte {
+	t.Helper()
+	priv, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	if err != nil {
+		t.Fatalf("generating EC key: %v", err)
+	}
+	der, err := x509.MarshalPKCS8PrivateKey(priv)
+	if err != nil {
+		t.Fatalf("marshalling EC key: %v", err)
+	}
+	return pem.EncodeToMemory(&pem.Block{
+		Type:  "PRIVATE KEY",
+		Bytes: der,
+	})
 }

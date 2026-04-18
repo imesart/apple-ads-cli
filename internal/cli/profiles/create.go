@@ -46,8 +46,8 @@ creates the profile as long as org_id was resolved. If this is the first
 profile, it becomes the default automatically.
 
 Example:
-  aads profiles create --name default --client-id SEARCHADS.abc --team-id SEARCHADS.abc --key-id abc --org-id 123 --private-key-path ~/.aads/key.pem
-  aads profiles create --name work --client-id SEARCHADS.def --org-id 456 --private-key-path ~/.aads/work.pem
+  aads profiles create --name default --client-id SEARCHADS.abc --team-id SEARCHADS.abc --key-id abc --org-id 123
+  aads profiles create --name work --client-id SEARCHADS.def --team-id SEARCHADS.def --key-id def --org-id 456 --private-key-path ~/.aads/keys/work-private-key.pem
 
 Time defaults apply to mutation time flags like --start-time and --end-time.
 If default_timezone is empty, the local machine timezone is used. If
@@ -64,6 +64,7 @@ match default_currency. Use 0 or an empty value to disable a limit.`,
 			if profileName == "" {
 				return shared.UsageError("--name is required")
 			}
+			explicitPrivateKeyPath := strings.TrimSpace(*privateKeyPath) != ""
 
 			cf := config.LoadFile()
 
@@ -80,6 +81,9 @@ match default_currency. Use 0 or an empty value to disable a limit.`,
 				DefaultCurrency:  strings.TrimSpace(*defaultCurrency),
 				DefaultTimezone:  strings.TrimSpace(*defaultTimezone),
 				DefaultTimeOfDay: strings.TrimSpace(*defaultTimeOfDay),
+			}
+			if p.PrivateKeyPath == "" {
+				p.PrivateKeyPath = defaultPrivateKeyPath(profileName)
 			}
 			discovered := discoveredProfileDefaults{}
 			explicitOrgID := p.OrgID
@@ -130,8 +134,8 @@ match default_currency. Use 0 or an empty value to disable a limit.`,
 				return shared.ValidationErrorf("--max-budget: %v", err)
 			}
 			if p.PrivateKeyPath != "" {
-				if _, err := os.Stat(p.PrivateKeyPath); os.IsNotExist(err) {
-					fmt.Fprintf(os.Stderr, "Warning: private key file %q does not exist\n", p.PrivateKeyPath)
+				if _, err := os.Stat(expandUserPath(p.PrivateKeyPath)); os.IsNotExist(err) {
+					fmt.Fprintln(os.Stderr, createMissingPrivateKeyWarning(profileName, p.PrivateKeyPath, explicitPrivateKeyPath))
 				}
 			}
 

@@ -52,13 +52,8 @@ Invite an API user in [Apple Ads website](https://app-ads.apple.com/):
 Generate the key pair in a local terminal:
 
 ```sh
-# Generate a private key
-mkdir ~/.aads
-openssl ecparam -genkey -name prime256v1 -noout -out ~/.aads/private-key.pem
-
-# Extract a public key
-openssl ec -in ~/.aads/private-key.pem -pubout -out ~/.aads/public-key.pem
-cat ~/.aads/public-key.pem
+# Generate a private key and print the public key
+aads profiles genkey --name default
 ```
 
 In a private browser window, or after clearing cookies:
@@ -79,7 +74,6 @@ aads profiles create \
     --client-id SEARCHADS.example \
     --team-id SEARCHADS.example \
     --key-id ABC123 \
-    --private-key-path ~/.aads/private-key.pem \
     --max-daily-budget 1000 \
     --max-bid 10
 ```

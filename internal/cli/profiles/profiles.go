@@ -16,6 +16,7 @@ func Command() *ffcli.Command {
 		Subcommands: []*ffcli.Command{
 			listCmd(),
 			getCmd(),
+			genkeyCmd(),
 			createCmd(),
 			updateCmd(),
 			deleteCmd(),
