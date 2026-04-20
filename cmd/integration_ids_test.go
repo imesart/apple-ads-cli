@@ -50,7 +50,7 @@ func TestLive_ReadCommandCoverage(t *testing.T) {
 		{name: "apps search", args: []string{"apps", "search", "--query", "fitness", "--limit", "1", "-f", "json"}, wantContains: []string{`"adamId"`}},
 		{name: "apps details", args: []string{"apps", "details", "--adam-id", ids.AdamID, "-f", "json"}, wantContains: []string{ids.AdamID}},
 		{name: "apps localized", args: []string{"apps", "localized", "--adam-id", ids.AdamID, "-f", "json"}, skipOnOutput: []string{`HTTP 404: Resource not found`}, wantContains: []string{`"language`}},
-		{name: "geo search", args: []string{"geo", "search", "--query", "luxembourg", "--limit", "1", "-f", "json"}, wantContains: []string{`"displayName"`}},
+		{name: "geo search", args: []string{"geo", "search", "--query", "brussels", "--limit", "1", "-f", "json"}, wantContains: []string{`"displayName"`}},
 		{name: "geo get", args: []string{"geo", "get", "--entity", "Country", "--geo-id", "US", "-f", "json"}, allowEmpty: true, wantContains: []string{`"countryOrRegion"`}},
 		{name: "reports campaigns", args: []string{"reports", "campaigns", "--start", "2026-03-18", "--end", "2026-03-25", "-f", "json"}, wantContains: []string{`"campaignId"`}},
 		{name: "reports adgroups", args: []string{"reports", "adgroups", "--campaign-id", ids.CampaignID, "--start", "2026-03-18", "--end", "2026-03-25", "-f", "json"}, wantContains: []string{`"adGroupId"`}},
