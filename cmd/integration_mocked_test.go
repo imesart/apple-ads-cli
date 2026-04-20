@@ -448,6 +448,11 @@ func TestIntegration_MockedMutationCheckCoverage(t *testing.T) {
 			args:         []string{"profiles", "delete", "--name", "work", "--check", "-f", "json"},
 			wantContains: []string{`"action":"delete profile"`, `"target":"name work"`},
 		},
+		{
+			name:         "profiles delete check with private key",
+			args:         []string{"profiles", "delete", "--name", "work", "--delete-private-key", "--check", "-f", "json"},
+			wantContains: []string{`"action":"delete profile"`, `"target":"name work"`},
+		},
 	}
 
 	for _, tc := range tests {
