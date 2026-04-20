@@ -120,6 +120,13 @@ the CLI exposes it under the `orgs` command group. Explicit CLI flags take
 precedence over inferred ACL values. If the matching ACL row is missing, the
 CLI warns and still creates the profile with the resolved `org_id`.
 
+`aads profiles create --interactive` is a TTY-only setup wizard. It prompts for
+missing fields, can guide the user through API-user invitation and key setup,
+parses pasted `clientId` / `teamId` / `keyId` text, and gathers safety limits
+before writing the profile. The interactive flow creates the profile only after
+all prompts complete successfully. Browser launch is best-effort: known browsers
+are opened in private mode when possible, otherwise the default browser is used.
+
 ### Precedence
 
 1. CLI flags (`--org-id`, `--client-id`, etc.)
@@ -148,8 +155,10 @@ Environment variables override stored config values.
 ### Profile setup
 
 `aads profiles genkey --name <name>` generates a P-256 private key at `~/.aads/keys/<name>-private-key.pem` and prints the corresponding public key to stdout.
-`aads profiles create --name <name>` creates a named profile in `~/.aads/config.yaml` from credentials passed via flags. When `--private-key-path` is omitted, it stores the default key path `~/.aads/keys/<name>-private-key.pem`.
+`aads profiles create --name <name>` creates a named profile in `~/.aads/config.yaml` from credentials passed via flags. When `--private-key-path` is omitted, it stores the default key path `~/.aads/keys/<name>-private-key.pem`. If `--private-key-path` is provided explicitly, the file must already exist.
+`aads profiles create --interactive` prompts for missing fields in a terminal wizard. It defaults the profile name to `default`, can generate the default key file before profile creation, prompts for `max_daily_budget`, `max_bid`, and `max_cpa_goal` with `0` meaning "no limit", and writes the profile only after the final confirmation-free create step succeeds.
 `aads profiles update --name <name>` updates an existing profile.
+`aads profiles delete --name <name> --confirm --delete-private-key` deletes the profile and then attempts to delete the configured private key file, warning if the file is missing or cannot be removed.
 `aads profiles get --name <name> --show-key` prints the configured profile public key instead of profile details.
 
 ## Command Structure

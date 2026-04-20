@@ -14,9 +14,18 @@ import (
 
 type discoveredProfileDefaults struct {
 	OrgID           string
+	ParentOrgID     string
 	DefaultCurrency string
 	DefaultTimezone string
+	Organizations   []discoveredOrganization
 	Warnings        []string
+}
+
+type discoveredOrganization struct {
+	OrgID    string
+	OrgName  string
+	Currency string
+	Timezone string
 }
 
 func discoverProfileDefaults(ctx context.Context, cfg config.Profile, explicitOrgID string) (discoveredProfileDefaults, error) {
@@ -59,6 +68,7 @@ func discoverProfileDefaults(ctx context.Context, cfg config.Profile, explicitOr
 			return result, fmt.Errorf("discovering org from orgs user (Apple ACLs): parentOrgId is empty")
 		}
 		resolvedOrgID = fmt.Sprintf("%d", meResp.Data.ParentOrgID)
+		result.ParentOrgID = resolvedOrgID
 	}
 	result.OrgID = resolvedOrgID
 
@@ -69,6 +79,12 @@ func discoverProfileDefaults(ctx context.Context, cfg config.Profile, explicitOr
 	}
 
 	for _, acl := range aclResp.Data {
+		result.Organizations = append(result.Organizations, discoveredOrganization{
+			OrgID:    fmt.Sprintf("%d", acl.OrgID),
+			OrgName:  strings.TrimSpace(acl.OrgName),
+			Currency: strings.TrimSpace(acl.Currency),
+			Timezone: strings.TrimSpace(acl.TimeZone),
+		})
 		if fmt.Sprintf("%d", acl.OrgID) != resolvedOrgID {
 			continue
 		}

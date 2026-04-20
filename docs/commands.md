@@ -2413,17 +2413,22 @@ Create a new profile.
 
 ```
 USAGE
-  aads profiles create --name NAME [--org-id ID] [flags]
+  aads profiles create [--name NAME] [--org-id ID] [flags]
 
-Create a new configuration profile. If --org-id is omitted, the CLI tries to infer it
-from Apple Ads by calling orgs user and using parentOrgId. It then looks up the
-matching orgs list row to infer default_currency and default_timezone unless
-you already provided those flags. Apple calls this ACL data; the CLI exposes it
-under the orgs command group. If the lookup fails, the CLI warns and still
-creates the profile as long as org_id was resolved. If this is the first
-profile, it becomes the default automatically.
+Create a new configuration profile. Use --interactive to launch a
+terminal wizard that prompts for missing values, guides key setup, and
+gathers Apple Ads credentials before writing the profile.
+
+If --org-id is omitted, the CLI tries to infer it from Apple Ads by calling
+orgs user and using parentOrgId. It then looks up the matching orgs list row
+to infer default_currency and default_timezone unless you already provided
+those flags. Apple calls this ACL data; the CLI exposes it under the orgs
+command group. If the lookup fails, the CLI warns and still creates the
+profile as long as org_id was resolved. If this is the first profile, it
+becomes the default automatically.
 
 Example:
+  aads profiles create --interactive
   aads profiles create --name default --client-id SEARCHADS.abc --team-id SEARCHADS.abc --key-id abc --org-id 123
   aads profiles create --name work --client-id SEARCHADS.def --team-id SEARCHADS.def --key-id def --org-id 456 --private-key-path ~/.aads/keys/work-private-key.pem
 
@@ -2448,12 +2453,13 @@ FLAGS
   -f json                      --format (shorthand)
   -fields string               Comma-separated output fields to include
   -format json                 Output format: json (default when stdout is not a TTY) | table (default for TTY) | yaml | markdown | ids | pipe
+  -interactive=false           Prompt for missing profile fields in a terminal wizard
   -key-id string               Apple Ads key ID
   -max-bid string              Safety limit in default currency: "AMOUNT" or "AMOUNT CURRENCY" (0 or empty = disabled)
   -max-budget string           Safety limit in default currency: "AMOUNT" or "AMOUNT CURRENCY" (0 or empty = disabled)
   -max-cpa-goal string         Safety limit in default currency: "AMOUNT" or "AMOUNT CURRENCY" (0 or empty = disabled)
   -max-daily-budget string     Safety limit in default currency: "AMOUNT" or "AMOUNT CURRENCY" (0 or empty = disabled)
-  -name string                 Profile name (required)
+  -name string                 Profile name
   -org-id string               Apple Ads organization ID
   -pretty=false                Pretty-print JSON even when stdout is not a TTY
   -private-key-path string     Path to ES256 private key PEM file
@@ -2513,24 +2519,27 @@ Delete a profile.
 
 ```
 USAGE
-  aads profiles delete --name NAME --confirm
+  aads profiles delete --name NAME --confirm [--delete-private-key]
 
 Delete a configuration profile. Requires --confirm.
 If the deleted profile was the default, the default is cleared.
+Use --delete-private-key to also remove the configured private key file.
 
 Example:
   aads profiles delete --name work --confirm
+  aads profiles delete --name work --confirm --delete-private-key
 ```
 
 ```
 FLAGS
-  -check=false    Validate and summarize without writing config
-  -confirm=false  Confirm deletion
-  -f json         --format (shorthand)
-  -fields string  Comma-separated output fields to include
-  -format json    Output format: json (default when stdout is not a TTY) | table (default for TTY) | yaml | markdown | ids | pipe
-  -name string    Profile name to delete (required)
-  -pretty=false   Pretty-print JSON even when stdout is not a TTY
+  -check=false               Validate and summarize without writing config
+  -confirm=false             Confirm deletion
+  -delete-private-key=false  Delete the configured private key file after deleting the profile
+  -f json                    --format (shorthand)
+  -fields string             Comma-separated output fields to include
+  -format json               Output format: json (default when stdout is not a TTY) | table (default for TTY) | yaml | markdown | ids | pipe
+  -name string               Profile name to delete (required)
+  -pretty=false              Pretty-print JSON even when stdout is not a TTY
 ```
 
 ### profiles set-default

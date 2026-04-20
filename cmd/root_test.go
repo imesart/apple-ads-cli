@@ -1956,7 +1956,7 @@ func TestRun_ProfilesCreate_UsesConfigDirFlag(t *testing.T) {
 	}
 }
 
-func TestRun_ProfilesCreate_ExplicitPrivateKeyPathWarningExplainsOverride(t *testing.T) {
+func TestRun_ProfilesCreate_ExplicitPrivateKeyPathMissingFails(t *testing.T) {
 	configDir := filepath.Join(t.TempDir(), "config")
 	t.Setenv("AADS_CONFIG_DIR", configDir)
 
@@ -1967,20 +1967,275 @@ func TestRun_ProfilesCreate_ExplicitPrivateKeyPathWarningExplainsOverride(t *tes
 		"--org-id", "123",
 		"--private-key-path", missingKeyPath,
 	}, "")
+	if code != ExitError {
+		t.Fatalf("exit code = %d, want %d; output=%q", code, ExitError, out)
+	}
+	if !strings.Contains(out, fmt.Sprintf("private key file %q does not exist", missingKeyPath)) {
+		t.Fatalf("unexpected output: %q", out)
+	}
+}
+
+func TestRun_ProfilesCreate_InteractiveRequiresTTY(t *testing.T) {
+	out, code := captureRun(t, []string{"profiles", "create", "--interactive"}, "")
+	if code != ExitUsage {
+		t.Fatalf("exit code = %d, want %d; output=%q", code, ExitUsage, out)
+	}
+	if !strings.Contains(out, "--interactive requires a terminal on stdin and stdout") {
+		t.Fatalf("unexpected output: %q", out)
+	}
+}
+
+func TestRun_ProfilesCreate_InteractiveGuidesSetupAndCreatesProfile(t *testing.T) {
+	configDir := filepath.Join(t.TempDir(), "config")
+	t.Setenv("AADS_CONFIG_DIR", configDir)
+
+	restoreInteractive := profilescli.SetInteractiveFuncsForTesting(
+		func() bool { return true },
+		func() bool { return true },
+		func() bool { return true },
+		func(string) error { return nil },
+		func(string) error { return nil },
+		func(string) error { return nil },
+	)
+	defer restoreInteractive()
+
+	restoreKeygen := profilescli.SetKeygenFuncsForTesting(
+		func(string) (string, error) { return "/usr/bin/openssl", nil },
+		func(_ context.Context, name string, args ...string) ([]byte, error) {
+			if name != "openssl" {
+				t.Fatalf("unexpected command name: %s", name)
+			}
+			if err := os.WriteFile(args[len(args)-1], generateTestECPrivateKey(t), 0o600); err != nil {
+				t.Fatalf("WriteFile(%q): %v", args[len(args)-1], err)
+			}
+			return nil, nil
+		},
+	)
+	defer restoreKeygen()
+
+	stdin := strings.Join([]string{
+		"",
+		"",
+		"",
+		"",
+		"",
+		"clientId",
+		"SEARCHADS.client",
+		"teamId",
+		"SEARCHADS.team",
+		"keyId",
+		"KEY123",
+		"",
+		"250",
+		"10",
+		"0",
+	}, "\n") + "\n"
+	out, code := captureRun(t, []string{
+		"profiles", "create", "--interactive",
+		"--org-id", "123",
+		"--default-currency", "USD",
+		"--default-timezone", "UTC",
+	}, stdin)
 	if code != ExitSuccess {
 		t.Fatalf("exit code = %d, want %d; output=%q", code, ExitSuccess, out)
 	}
-	if !strings.Contains(out, fmt.Sprintf("Warning: private key file %q does not exist.", missingKeyPath)) {
-		t.Fatalf("output missing explicit private-key warning: %q", out)
+	if !strings.Contains(out, "Invite an API user in Apple Ads") {
+		t.Fatalf("expected invite instructions: %q", out)
 	}
-	if strings.Contains(out, "This is the default key path") {
-		t.Fatalf("explicit private-key-path warning should not claim default path: %q", out)
+	if !strings.Contains(out, "Public key to paste into Apple Ads:") {
+		t.Fatalf("expected public key instructions: %q", out)
 	}
-	if !strings.Contains(out, "aads profiles genkey --name work") {
-		t.Fatalf("output missing genkey guidance: %q", out)
+	if !strings.Contains(out, "Public key copied to clipboard.") {
+		t.Fatalf("expected clipboard success message: %q", out)
 	}
-	if !strings.Contains(out, "--private-key-path") {
-		t.Fatalf("output missing override guidance: %q", out)
+	if !strings.Contains(out, `Profile "default" created in `) {
+		t.Fatalf("expected create success message: %q", out)
+	}
+
+	data, err := os.ReadFile(filepath.Join(configDir, "config.yaml"))
+	if err != nil {
+		t.Fatalf("ReadFile(config): %v", err)
+	}
+	content := string(data)
+	if !strings.Contains(content, `client_id: SEARCHADS.client`) {
+		t.Fatalf("config missing client_id: %s", content)
+	}
+	if !strings.Contains(content, `team_id: SEARCHADS.team`) {
+		t.Fatalf("config missing team_id: %s", content)
+	}
+	if !strings.Contains(content, `key_id: KEY123`) {
+		t.Fatalf("config missing key_id: %s", content)
+	}
+	if !strings.Contains(content, `max_daily_budget: "250"`) {
+		t.Fatalf("config missing max_daily_budget: %s", content)
+	}
+	if !strings.Contains(content, `max_bid: "10"`) {
+		t.Fatalf("config missing max_bid: %s", content)
+	}
+	if !strings.Contains(content, `max_cpa_goal: ""`) {
+		t.Fatalf("config should keep max_cpa_goal disabled: %s", content)
+	}
+}
+
+func TestRun_ProfilesCreate_InteractiveEmptyOrgRepromptsWithoutHelp(t *testing.T) {
+	configDir := filepath.Join(t.TempDir(), "config")
+	t.Setenv("AADS_CONFIG_DIR", configDir)
+
+	keyPath := filepath.Join(t.TempDir(), "work.pem")
+	if err := os.WriteFile(keyPath, generateTestECPrivateKey(t), 0o600); err != nil {
+		t.Fatalf("WriteFile(%q): %v", keyPath, err)
+	}
+
+	restoreInteractive := profilescli.SetInteractiveFuncsForTesting(
+		func() bool { return true },
+		func() bool { return true },
+		func() bool { return true },
+		func(string) error { return nil },
+		func(string) error { return nil },
+		func(string) error { return fmt.Errorf("clipboard unavailable") },
+	)
+	defer restoreInteractive()
+
+	previousTransport := http.DefaultTransport
+	http.DefaultTransport = roundTripFunc(func(req *http.Request) (*http.Response, error) {
+		switch {
+		case req.URL.Host == "appleid.apple.com" && req.URL.Path == "/auth/oauth2/token":
+			return nil, fmt.Errorf("mock token failure")
+		default:
+			t.Fatalf("unexpected HTTP request: %s %s", req.Method, req.URL.String())
+			return nil, nil
+		}
+	})
+	defer func() { http.DefaultTransport = previousTransport }()
+
+	stdin := strings.Join([]string{
+		"default",
+		"",
+		"123",
+		"0",
+		"0",
+		"0",
+	}, "\n") + "\n"
+	out, code := captureRun(t, []string{
+		"profiles", "create", "--interactive",
+		"--private-key-path", keyPath,
+		"--client-id", "SEARCHADS.client",
+		"--team-id", "SEARCHADS.team",
+		"--key-id", "KEY123",
+	}, stdin)
+	if code != ExitSuccess {
+		t.Fatalf("exit code = %d, want %d; output=%q", code, ExitSuccess, out)
+	}
+	if !strings.Contains(out, "Organization ID is required.") {
+		t.Fatalf("unexpected output: %q", out)
+	}
+	if strings.Contains(out, "DESCRIPTION") || strings.Contains(out, "USAGE") || strings.Contains(out, "FLAGS") {
+		t.Fatalf("interactive empty-org prompt should not print help: %q", out)
+	}
+}
+
+func TestRun_ProfilesCreate_InteractiveExistingPrivateKeyPromptsForPath(t *testing.T) {
+	configDir := filepath.Join(t.TempDir(), "config")
+	t.Setenv("AADS_CONFIG_DIR", configDir)
+
+	keyPath := filepath.Join(t.TempDir(), "existing.pem")
+	if err := os.WriteFile(keyPath, generateTestECPrivateKey(t), 0o600); err != nil {
+		t.Fatalf("WriteFile(%q): %v", keyPath, err)
+	}
+
+	restoreInteractive := profilescli.SetInteractiveFuncsForTesting(
+		func() bool { return true },
+		func() bool { return true },
+		func() bool { return true },
+		func(string) error { return nil },
+		func(string) error { return nil },
+		func(string) error { return nil },
+	)
+	defer restoreInteractive()
+
+	stdin := strings.Join([]string{
+		"default",
+		"y",
+		"y",
+		keyPath,
+		"clientId",
+		"SEARCHADS.client",
+		"teamId",
+		"SEARCHADS.team",
+		"keyId",
+		"KEY123",
+		"",
+		"123",
+		"",
+		"0",
+		"0",
+		"0",
+	}, "\n") + "\n"
+	out, code := captureRun(t, []string{
+		"profiles", "create", "--interactive",
+	}, stdin)
+	if code != ExitSuccess {
+		t.Fatalf("exit code = %d, want %d; output=%q", code, ExitSuccess, out)
+	}
+	if !strings.Contains(out, "Private key path") {
+		t.Fatalf("expected private key path prompt: %q", out)
+	}
+
+	data, err := os.ReadFile(filepath.Join(configDir, "config.yaml"))
+	if err != nil {
+		t.Fatalf("ReadFile(config): %v", err)
+	}
+	if !strings.Contains(string(data), "private_key_path: "+keyPath) {
+		t.Fatalf("config missing prompted private key path: %s", data)
+	}
+}
+
+func TestRun_ProfilesDelete_DeletePrivateKeyRemovesConfiguredFile(t *testing.T) {
+	configDir := filepath.Join(t.TempDir(), "config")
+	keyPath := filepath.Join(t.TempDir(), "keys", "work-private-key.pem")
+	if err := os.MkdirAll(filepath.Dir(keyPath), 0o700); err != nil {
+		t.Fatalf("MkdirAll(%q): %v", filepath.Dir(keyPath), err)
+	}
+	if err := os.WriteFile(keyPath, generateTestECPrivateKey(t), 0o600); err != nil {
+		t.Fatalf("WriteFile(%q): %v", keyPath, err)
+	}
+	configPath := filepath.Join(configDir, "config.yaml")
+	if err := os.MkdirAll(configDir, 0o700); err != nil {
+		t.Fatalf("MkdirAll(%q): %v", configDir, err)
+	}
+	if err := os.WriteFile(configPath, []byte(fmt.Sprintf(`
+default_profile: work
+profiles:
+  work:
+    client_id: work-client
+    team_id: work-team
+    key_id: work-key
+    org_id: "123"
+    private_key_path: %s
+`, keyPath)), 0o600); err != nil {
+		t.Fatalf("WriteFile(%q): %v", configPath, err)
+	}
+	t.Setenv("AADS_CONFIG_DIR", configDir)
+
+	out, code := captureRun(t, []string{"profiles", "delete", "--name", "work", "--confirm", "--delete-private-key"}, "")
+	if code != ExitSuccess {
+		t.Fatalf("exit code = %d, want %d; output=%q", code, ExitSuccess, out)
+	}
+	if !strings.Contains(out, `Profile "work" deleted`) {
+		t.Fatalf("expected profile deletion message: %q", out)
+	}
+	if !strings.Contains(out, fmt.Sprintf("Private key file %q deleted.", keyPath)) {
+		t.Fatalf("expected private key deletion message: %q", out)
+	}
+	if _, err := os.Stat(keyPath); !os.IsNotExist(err) {
+		t.Fatalf("private key file should be deleted, stat err=%v", err)
+	}
+	data, err := os.ReadFile(configPath)
+	if err != nil {
+		t.Fatalf("ReadFile(%q): %v", configPath, err)
+	}
+	if strings.Contains(string(data), "work:") {
+		t.Fatalf("deleted profile should be removed from config: %s", data)
 	}
 }
 

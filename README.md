@@ -20,7 +20,7 @@ aads campaigns list --filter "status = ENABLED" \
 
 ## Install
 
-With Homebrew:
+With [Homebrew](https://brew.sh/):
 
 ```sh
 brew install imesart/tap/aads
@@ -42,43 +42,11 @@ aads version
 
 Set up Apple Ads API access. `aads` uses Apple Ads OAuth credentials to obtain and refresh API access tokens automatically.
 
-Invite an API user in [Apple Ads website](https://app-ads.apple.com/):
-
-- Sign in to Apple Ads as an account administrator (or ask an administrator to do these steps).
-- In the top right, press your name, then press `Settings` -> `User Management`.
-- Press `Invite Users`.
-- Fill in the fields and choose `API Account Manager` or `API Account Read Only`.
-
-Generate the key pair in a local terminal:
-
 ```sh
-# Generate a private key and print the public key
-aads profiles genkey --name default
+aads profiles create --interactive
 ```
 
-In a private browser window, or after clearing cookies:
-
-- Open the invitation link received by email.
-- In the top right, press your name, then go to `Settings` -> `API`.
-- Paste the public key, including delimiters.
-- Press `Save`.
-- Note the `clientId`, `teamId`, and `keyId` for the next step.
-
-For more details, see [Implementing OAuth for the Apple Ads API](https://developer.apple.com/documentation/apple_ads/implementing-oauth-for-the-apple-search-ads-api).
-
-Create a profile:
-
-```sh
-aads profiles create \
-    --name default \
-    --client-id SEARCHADS.example \
-    --team-id SEARCHADS.example \
-    --key-id ABC123 \
-    --max-daily-budget 1000 \
-    --max-bid 10
-```
-
-Specify `--default-currency` and `--org-id` if you have access to multiple currencies or organizations. Otherwise, `aads` uses the first available currency and org ID.
+Or read the detailed manual setup guide in [docs/auth.md](docs/auth.md).
 
 ## Examples
 
