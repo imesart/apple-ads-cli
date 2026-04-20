@@ -5,7 +5,7 @@
 [![Go version](https://img.shields.io/github/go-mod/go-version/imesart/apple-ads-cli?logo=go)](go.mod)
 [![License](https://img.shields.io/github/license/imesart/apple-ads-cli)](LICENSE)
 
-A command-line interface for the Apple Ads Campaign Management API, with **composable commands** to simplify common workflows, and **shareable campaign/ad group/keyword JSON** for export and import. Made for humans, usable by AI agents. Independent project, not affiliated with Apple.
+A command-line interface for the Apple Ads (formerly Apple Search Ads) Campaign Management API, with **composable commands** to simplify common workflows, and **shareable campaign/ad group/keyword JSON** for export and import. Made for humans, usable by AI agents. Independent project, not affiliated with Apple.
 
 ```sh
 # Find ad groups with less than 10 impressions in the last week, and increase
