@@ -254,6 +254,7 @@ aads apps localized        Get localized app details
 Shortcut flags build selector conditions automatically.
 As an alternate input form, `--from-json` also accepts `adamId`, `countryOrRegion`,
 `deviceClass`, `supplySource`, and `minAge`, which the CLI translates into selector conditions.
+`aads apps search` requires at least one of `--query` or `--only-owned-apps`.
 
 Endpoint-specific query flags:
 

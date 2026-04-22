@@ -1952,7 +1952,11 @@ Search for iOS apps.
 
 ```
 USAGE
-  aads apps search --query TEXT [flags]
+  aads apps search [--query TEXT] [--only-owned-apps] [flags]
+
+Search for iOS apps.
+
+Requires at least one of --query or --only-owned-apps.
 ```
 
 ```
@@ -1964,7 +1968,7 @@ FLAGS
   -offset 0               Starting offset
   -only-owned-apps=false  Only return apps owned by the current organization
   -pretty=false           Pretty-print JSON even when stdout is not a TTY
-  -query string           Search query string (required)
+  -query string           Search query string
 ```
 
 ### apps eligibility

@@ -493,6 +493,7 @@ func TestIntegration_AppsSearch_OnlyOwnedAppsQuery(t *testing.T) {
 	tests := []struct {
 		name                string
 		args                []string
+		wantQuery           string
 		wantReturnOwnedApps string
 		wantLimit           string
 		wantOffset          string
@@ -502,6 +503,7 @@ func TestIntegration_AppsSearch_OnlyOwnedAppsQuery(t *testing.T) {
 		{
 			name:                "paged request",
 			args:                []string{"apps", "search", "--query", "fittrack", "--only-owned-apps", "--limit", "2", "--offset", "4", "-f", "json"},
+			wantQuery:           "fittrack",
 			wantReturnOwnedApps: "true",
 			wantLimit:           "2",
 			wantOffset:          "4",
@@ -511,10 +513,21 @@ func TestIntegration_AppsSearch_OnlyOwnedAppsQuery(t *testing.T) {
 		{
 			name:                "fetch all pages",
 			args:                []string{"apps", "search", "--query", "fittrack", "--only-owned-apps", "-f", "json"},
+			wantQuery:           "fittrack",
 			wantReturnOwnedApps: "true",
 			wantLimit:           "1000",
 			wantOffset:          "0",
 			response:            `{"data":[{"adamId":900001,"name":"FitTrack"}],"pagination":{"totalResults":1,"startIndex":0,"itemsPerPage":1}}`,
+			wantContains:        `"FitTrack"`,
+		},
+		{
+			name:                "owned apps without query",
+			args:                []string{"apps", "search", "--only-owned-apps", "--limit", "2", "-f", "json"},
+			wantQuery:           "",
+			wantReturnOwnedApps: "true",
+			wantLimit:           "2",
+			wantOffset:          "",
+			response:            `{"data":[{"adamId":900001,"name":"FitTrack"}]}`,
 			wantContains:        `"FitTrack"`,
 		},
 	}
@@ -528,8 +541,8 @@ func TestIntegration_AppsSearch_OnlyOwnedAppsQuery(t *testing.T) {
 				tc.response,
 				func(req *http.Request) {
 					query := req.URL.Query()
-					if got := query.Get("query"); got != "fittrack" {
-						t.Fatalf("query = %q, want %q", got, "fittrack")
+					if got := query.Get("query"); got != tc.wantQuery {
+						t.Fatalf("query = %q, want %q", got, tc.wantQuery)
 					}
 					if got := query.Get("returnOwnedApps"); got != tc.wantReturnOwnedApps {
 						t.Fatalf("returnOwnedApps = %q, want %q", got, tc.wantReturnOwnedApps)

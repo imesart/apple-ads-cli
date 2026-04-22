@@ -34,7 +34,7 @@ func Command() *ffcli.Command {
 
 func searchCmd() *ffcli.Command {
 	fs := flag.NewFlagSet("search", flag.ContinueOnError)
-	query := fs.String("query", "", "Search query string (required)")
+	query := fs.String("query", "", "Search query string")
 	onlyOwnedApps := fs.Bool("only-owned-apps", false, "Only return apps owned by the current organization")
 	limit := fs.Int("limit", 0, "Maximum results; 0 fetches all pages")
 	offset := fs.Int("offset", 0, "Starting offset")
@@ -42,13 +42,16 @@ func searchCmd() *ffcli.Command {
 
 	return &ffcli.Command{
 		Name:       "search",
-		ShortUsage: "aads apps search --query TEXT [flags]",
+		ShortUsage: "aads apps search [--query TEXT] [--only-owned-apps] [flags]",
 		ShortHelp:  "Search for iOS apps.",
-		FlagSet:    fs,
+		LongHelp: `Search for iOS apps.
+
+Requires at least one of --query or --only-owned-apps.`,
+		FlagSet: fs,
 		Exec: func(ctx context.Context, args []string) error {
 			q := strings.TrimSpace(*query)
-			if q == "" {
-				return shared.UsageErrorf("--query is required")
+			if q == "" && !*onlyOwnedApps {
+				return shared.UsageErrorf("either --query or --only-owned-apps is required")
 			}
 
 			client, err := shared.GetClient()

@@ -374,6 +374,16 @@ func TestRun_Help_KeywordsList_MatchesSmartListStructureWithoutMethodWording(t *
 	}
 }
 
+func TestRun_AppsSearch_RequiresQueryOrOnlyOwnedApps(t *testing.T) {
+	out, code := captureRun(t, []string{"apps", "search"}, "")
+	if code != ExitUsage {
+		t.Fatalf("exit code = %d, want %d; output=%q", code, ExitUsage, out)
+	}
+	if !strings.Contains(out, "either --query or --only-owned-apps is required") {
+		t.Fatalf("unexpected output: %q", out)
+	}
+}
+
 func TestRun_Help_NegativesList_DoesNotMentionRequestMethods(t *testing.T) {
 	out, code := captureRun(t, []string{"help", "negatives", "list"}, "")
 	if code != ExitSuccess {
