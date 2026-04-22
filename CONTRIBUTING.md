@@ -43,6 +43,16 @@ make build
 
 The local binary is written to `bin/aads`.
 
+Install the tracked git hooks with:
+
+```sh
+make install-git-hooks
+```
+
+This sets `core.hooksPath` to `.githooks` for the local clone. The pre-commit
+hook runs `make format-check`, `make lint`, and `make test`, and blocks the
+commit if any of them fail.
+
 ## Tests And Checks
 
 Run the most specific tests for the code you changed. Useful targets include:

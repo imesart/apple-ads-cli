@@ -545,6 +545,7 @@ These are encoded as CLI behavior, not left for users to discover:
 ```makefile
 build              # go build -o bin/aads
 install            # go install
+install-git-hooks  # git config core.hooksPath .githooks
 test               # go test ./...
 test-integration   # go test ./cmd -run '^TestIntegration_'
 test-live          # AADS_INTEGRATION_TEST=1 go test ./cmd -run '^TestLive_' -count=1
@@ -558,6 +559,11 @@ openapi-check      # scripts/generate_openapi.py --check
 schema-index      # scripts/generate_schema_index.py
 release-artifacts  # python3 scripts/create_release_artifacts.py --version <x.y.z> --output-dir release
 ```
+
+The repository tracks git hooks under `.githooks/`. Run `make install-git-hooks`
+to configure the local clone to use them via `core.hooksPath`. The current
+pre-commit hook runs `make format-check`, `make lint`, and `make test` and
+fails the commit on the first failing check.
 
 ### Release Packaging
 

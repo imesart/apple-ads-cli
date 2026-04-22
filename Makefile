@@ -16,7 +16,7 @@ NC := \033[0m
 
 .DEFAULT_GOAL := help
 
-.PHONY: help build install test test-integration test-live lint vet fmt format format-check commands-doc commands-doc-check openapi openapi-check schema-index schema-index-check release-artifacts clean
+.PHONY: help build install install-git-hooks test test-integration test-live lint vet fmt format format-check commands-doc commands-doc-check openapi openapi-check schema-index schema-index-check release-artifacts clean
 
 help:
 	@echo ""
@@ -24,6 +24,7 @@ help:
 	@echo ""
 	@echo "  build         Build the CLI into bin/$(BINARY)"
 	@echo "  install       Install the CLI with go install"
+	@echo "  install-git-hooks  Configure git to use the repo's tracked hooks"
 	@echo "  test          Run the Go test suite"
 	@echo "  test-integration  Run mocked command-integration coverage in ./cmd"
 	@echo "  test-live     Run live command-integration coverage in ./cmd with AADS_INTEGRATION_TEST=1"
@@ -51,6 +52,12 @@ install:
 	@echo "$(BLUE)Installing $(BINARY)...$(NC)"
 	$(GO) install $(LDFLAGS) .
 	@echo "$(GREEN)Install complete$(NC)"
+
+install-git-hooks:
+	@echo "$(BLUE)Installing tracked git hooks...$(NC)"
+	git config core.hooksPath .githooks
+	chmod +x .githooks/pre-commit
+	@echo "$(GREEN)Git hooks installed from .githooks/$(NC)"
 
 test:
 	@echo "$(BLUE)Running tests...$(NC)"

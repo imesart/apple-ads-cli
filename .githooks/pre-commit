@@ -1,0 +1,15 @@
+#!/bin/sh
+
+set -eu
+
+repo_root=$(git rev-parse --show-toplevel)
+cd "$repo_root"
+
+echo "pre-commit: checking formatting"
+make format-check
+
+echo "pre-commit: linting"
+make lint
+
+echo "pre-commit: running tests"
+make test
