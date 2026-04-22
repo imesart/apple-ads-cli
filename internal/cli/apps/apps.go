@@ -35,6 +35,7 @@ func Command() *ffcli.Command {
 func searchCmd() *ffcli.Command {
 	fs := flag.NewFlagSet("search", flag.ContinueOnError)
 	query := fs.String("query", "", "Search query string (required)")
+	onlyOwnedApps := fs.Bool("only-owned-apps", false, "Only return apps owned by the current organization")
 	limit := fs.Int("limit", 0, "Maximum results; 0 fetches all pages")
 	offset := fs.Int("offset", 0, "Starting offset")
 	output := shared.BindOutputFlags(fs)
@@ -59,9 +60,10 @@ func searchCmd() *ffcli.Command {
 			defer cancel()
 
 			req := apps.SearchRequest{
-				SearchQuery: q,
-				Limit:       *limit,
-				Offset:      *offset,
+				SearchQuery:     q,
+				ReturnOwnedApps: *onlyOwnedApps,
+				Limit:           *limit,
+				Offset:          *offset,
 			}
 			if *limit == 0 {
 				rows, err := api.FetchAll[json.RawMessage](ctx, client, req)

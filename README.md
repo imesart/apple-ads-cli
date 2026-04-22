@@ -211,7 +211,7 @@ aads structure import --from-structure @structure.json --countries-or-regions GB
 Additional command groups cover ads, creatives, budget orders, product pages, ad rejections, apps, geolocation, organizations/user context (`orgs`, backed by Apple Ads ACLs), profiles, schema lookup, version output, and shell completion.
 
 ```sh
-aads apps search --query "FitTrack"
+aads apps search --query "FitTrack" --only-owned-apps
 aads geo search --query "Luxembourg"
 aads profiles list
 aads schema campaigns

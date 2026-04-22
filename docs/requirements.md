@@ -257,6 +257,7 @@ As an alternate input form, `--from-json` also accepts `adamId`, `countryOrRegio
 
 Endpoint-specific query flags:
 
+- `apps search --only-owned-apps` sends `returnOwnedApps=true`.
 - `creatives get --include-deleted-creative-set-assets` sends `includeDeletedCreativeSetAssets=true`.
 - `product-pages list --filter "name=VALUE"` and `--filter "state=VALUE"` send the corresponding query parameters. Other filter fields are rejected.
 - `product-pages countries --countries-or-regions US,GB` sends `countriesOrRegions=US,GB`.

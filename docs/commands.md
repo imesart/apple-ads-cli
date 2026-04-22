@@ -1957,13 +1957,14 @@ USAGE
 
 ```
 FLAGS
-  -f json         --format (shorthand)
-  -fields string  Comma-separated output fields to include
-  -format json    Output format: json (default when stdout is not a TTY) | table (default for TTY) | yaml | markdown | ids | pipe
-  -limit 0        Maximum results; 0 fetches all pages
-  -offset 0       Starting offset
-  -pretty=false   Pretty-print JSON even when stdout is not a TTY
-  -query string   Search query string (required)
+  -f json                 --format (shorthand)
+  -fields string          Comma-separated output fields to include
+  -format json            Output format: json (default when stdout is not a TTY) | table (default for TTY) | yaml | markdown | ids | pipe
+  -limit 0                Maximum results; 0 fetches all pages
+  -offset 0               Starting offset
+  -only-owned-apps=false  Only return apps owned by the current organization
+  -pretty=false           Pretty-print JSON even when stdout is not a TTY
+  -query string           Search query string (required)
 ```
 
 ### apps eligibility

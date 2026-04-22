@@ -31,6 +31,10 @@ const (
 )
 
 func newCoverageClient(t *testing.T, wantMethod, wantPath, response string) *apiPkg.Client {
+	return newCoverageClientWithCheck(t, wantMethod, wantPath, response, nil)
+}
+
+func newCoverageClientWithCheck(t *testing.T, wantMethod, wantPath, response string, check func(*http.Request)) *apiPkg.Client {
 	t.Helper()
 
 	client := apiPkg.NewClient(func(context.Context) (string, error) {
@@ -43,6 +47,9 @@ func newCoverageClient(t *testing.T, wantMethod, wantPath, response string) *api
 			}
 			if req.URL.Path != wantPath {
 				t.Fatalf("path = %s, want %s", req.URL.Path, wantPath)
+			}
+			if check != nil {
+				check(req)
 			}
 			return jsonResponse(response), nil
 		}),
@@ -477,6 +484,73 @@ profiles:
 				if !strings.Contains(out, want) {
 					t.Fatalf("output missing %q: %q", want, out)
 				}
+			}
+		})
+	}
+}
+
+func TestIntegration_AppsSearch_OnlyOwnedAppsQuery(t *testing.T) {
+	tests := []struct {
+		name                string
+		args                []string
+		wantReturnOwnedApps string
+		wantLimit           string
+		wantOffset          string
+		response            string
+		wantContains        string
+	}{
+		{
+			name:                "paged request",
+			args:                []string{"apps", "search", "--query", "fittrack", "--only-owned-apps", "--limit", "2", "--offset", "4", "-f", "json"},
+			wantReturnOwnedApps: "true",
+			wantLimit:           "2",
+			wantOffset:          "4",
+			response:            `{"data":[{"adamId":900001,"name":"FitTrack"}]}`,
+			wantContains:        `"FitTrack"`,
+		},
+		{
+			name:                "fetch all pages",
+			args:                []string{"apps", "search", "--query", "fittrack", "--only-owned-apps", "-f", "json"},
+			wantReturnOwnedApps: "true",
+			wantLimit:           "1000",
+			wantOffset:          "0",
+			response:            `{"data":[{"adamId":900001,"name":"FitTrack"}],"pagination":{"totalResults":1,"startIndex":0,"itemsPerPage":1}}`,
+			wantContains:        `"FitTrack"`,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			client := newCoverageClientWithCheck(
+				t,
+				http.MethodGet,
+				"/api/v5/search/apps",
+				tc.response,
+				func(req *http.Request) {
+					query := req.URL.Query()
+					if got := query.Get("query"); got != "fittrack" {
+						t.Fatalf("query = %q, want %q", got, "fittrack")
+					}
+					if got := query.Get("returnOwnedApps"); got != tc.wantReturnOwnedApps {
+						t.Fatalf("returnOwnedApps = %q, want %q", got, tc.wantReturnOwnedApps)
+					}
+					if got := query.Get("limit"); got != tc.wantLimit {
+						t.Fatalf("limit = %q, want %q", got, tc.wantLimit)
+					}
+					if got := query.Get("offset"); got != tc.wantOffset {
+						t.Fatalf("offset = %q, want %q", got, tc.wantOffset)
+					}
+				},
+			)
+			restore := shared.SetClientForTesting(client, &config.Profile{OrgID: "123", DefaultCurrency: "USD"})
+			defer restore()
+
+			out, code := captureRun(t, tc.args, "")
+			if code != ExitSuccess {
+				t.Fatalf("exit code = %d, want %d; output=%q", code, ExitSuccess, out)
+			}
+			if !strings.Contains(out, tc.wantContains) {
+				t.Fatalf("output missing %q: %q", tc.wantContains, out)
 			}
 		})
 	}
