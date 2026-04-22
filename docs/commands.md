@@ -1234,6 +1234,7 @@ FLAGS
   -limit 0        Maximum results; 0 fetches all
   -offset 0       Starting offset
   -pretty=false   Pretty-print JSON even when stdout is not a TTY
+  -sort value     Sort: "field:asc" or "field:desc" (repeatable)
 ```
 
 ### budgetorders get
@@ -1392,6 +1393,7 @@ FLAGS
   -limit 0         Maximum results; 0 fetches all
   -offset 0        Starting offset
   -pretty=false    Pretty-print JSON even when stdout is not a TTY
+  -sort value      Sort: "field:asc" or "field:desc" (repeatable)
 ```
 
 ### product-pages get
@@ -1424,12 +1426,13 @@ USAGE
 
 ```
 FLAGS
-  -adam-id string          App Adam ID
+  -adam-id string          App Adam ID (or - to read IDs from stdin) (required)
   -f json                  --format (shorthand)
   -fields string           Comma-separated output fields to include
   -format json             Output format: json (default when stdout is not a TTY) | table (default for TTY) | yaml | markdown | ids | pipe
   -pretty=false            Pretty-print JSON even when stdout is not a TTY
-  -product-page-id string  Product Page ID
+  -product-page-id string  Product Page ID (or - to read IDs from stdin) (required)
+  -sort value              Sort: "field:asc" or "field:desc" (repeatable)
 ```
 
 ### product-pages countries
@@ -1448,6 +1451,7 @@ FLAGS
   -fields string                Comma-separated output fields to include
   -format json                  Output format: json (default when stdout is not a TTY) | table (default for TTY) | yaml | markdown | ids | pipe
   -pretty=false                 Pretty-print JSON even when stdout is not a TTY
+  -sort value                   Sort: "field:asc" or "field:desc" (repeatable)
 ```
 
 ### product-pages devices
@@ -1465,6 +1469,7 @@ FLAGS
   -fields string  Comma-separated output fields to include
   -format json    Output format: json (default when stdout is not a TTY) | table (default for TTY) | yaml | markdown | ids | pipe
   -pretty=false   Pretty-print JSON even when stdout is not a TTY
+  -sort value     Sort: "field:asc" or "field:desc" (repeatable)
 ```
 
 ---
@@ -1969,6 +1974,7 @@ FLAGS
   -only-owned-apps=false  Only return apps owned by the current organization
   -pretty=false           Pretty-print JSON even when stdout is not a TTY
   -query string           Search query string
+  -sort value             Sort: "field:asc" or "field:desc" (repeatable)
 ```
 
 ### apps eligibility
@@ -2091,6 +2097,7 @@ FLAGS
   -offset 0             Starting offset
   -pretty=false         Pretty-print JSON even when stdout is not a TTY
   -query string         Search query (required)
+  -sort value           Sort: "field:asc" or "field:desc" (repeatable)
 ```
 
 ### geo get
@@ -2155,6 +2162,7 @@ FLAGS
   -fields string  Comma-separated output fields to include
   -format json    Output format: json (default when stdout is not a TTY) | table (default for TTY) | yaml | markdown | ids | pipe
   -pretty=false   Pretty-print JSON even when stdout is not a TTY
+  -sort value     Sort: "field:asc" or "field:desc" (repeatable)
 ```
 
 ### orgs user

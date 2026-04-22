@@ -569,6 +569,282 @@ func TestIntegration_AppsSearch_OnlyOwnedAppsQuery(t *testing.T) {
 	}
 }
 
+func TestIntegration_AppsSearch_LocalSort(t *testing.T) {
+	client := newCoverageClientWithCheck(
+		t,
+		http.MethodGet,
+		"/api/v5/search/apps",
+		`{"data":[{"adamId":2,"name":"Zulu"},{"adamId":1,"name":"Alpha"}]}`,
+		func(req *http.Request) {
+			query := req.URL.Query()
+			if got := query.Get("query"); got != "fittrack" {
+				t.Fatalf("query = %q, want %q", got, "fittrack")
+			}
+			if got := query.Get("limit"); got != "2" {
+				t.Fatalf("limit = %q, want %q", got, "2")
+			}
+			if got := query.Get("sort"); got != "" {
+				t.Fatalf("unexpected remote sort query %q", got)
+			}
+			if got := query.Get("sortOrder"); got != "" {
+				t.Fatalf("unexpected remote sortOrder query %q", got)
+			}
+		},
+	)
+	restore := shared.SetClientForTesting(client, &config.Profile{OrgID: "123", DefaultCurrency: "USD"})
+	defer restore()
+
+	out, code := captureRun(t, []string{"apps", "search", "--query", "fittrack", "--limit", "2", "--sort", "name:asc", "-f", "json"}, "")
+	if code != ExitSuccess {
+		t.Fatalf("exit code = %d, want %d; output=%q", code, ExitSuccess, out)
+	}
+	alpha := strings.Index(out, `"name":"Alpha"`)
+	zulu := strings.Index(out, `"name":"Zulu"`)
+	if alpha < 0 || zulu < 0 || alpha > zulu {
+		t.Fatalf("expected local sort by name asc, got %q", out)
+	}
+}
+
+func TestIntegration_AppsSearch_LocalSortDescending(t *testing.T) {
+	client := newCoverageClientWithCheck(
+		t,
+		http.MethodGet,
+		"/api/v5/search/apps",
+		`{"data":[{"adamId":1,"name":"Alpha"},{"adamId":2,"name":"Zulu"}]}`,
+		func(req *http.Request) {
+			query := req.URL.Query()
+			if got := query.Get("sort"); got != "" {
+				t.Fatalf("unexpected remote sort query %q", got)
+			}
+			if got := query.Get("sortOrder"); got != "" {
+				t.Fatalf("unexpected remote sortOrder query %q", got)
+			}
+		},
+	)
+	restore := shared.SetClientForTesting(client, &config.Profile{OrgID: "123", DefaultCurrency: "USD"})
+	defer restore()
+
+	out, code := captureRun(t, []string{"apps", "search", "--query", "fittrack", "--limit", "2", "--sort", "name:desc", "-f", "json"}, "")
+	if code != ExitSuccess {
+		t.Fatalf("exit code = %d, want %d; output=%q", code, ExitSuccess, out)
+	}
+	alpha := strings.Index(out, `"name":"Alpha"`)
+	zulu := strings.Index(out, `"name":"Zulu"`)
+	if alpha < 0 || zulu < 0 || zulu > alpha {
+		t.Fatalf("expected local sort by name desc, got %q", out)
+	}
+}
+
+func TestIntegration_AppsSearch_LocalSortMultiple(t *testing.T) {
+	client := newCoverageClientWithCheck(
+		t,
+		http.MethodGet,
+		"/api/v5/search/apps",
+		`{"data":[
+			{"adamId":1,"name":"Alpha","rank":2},
+			{"adamId":2,"name":"Alpha","rank":1},
+			{"adamId":3,"name":"Beta","rank":5}
+		]}`,
+		func(req *http.Request) {
+			query := req.URL.Query()
+			if got := query.Get("sort"); got != "" {
+				t.Fatalf("unexpected remote sort query %q", got)
+			}
+		},
+	)
+	restore := shared.SetClientForTesting(client, &config.Profile{OrgID: "123", DefaultCurrency: "USD"})
+	defer restore()
+
+	out, code := captureRun(t, []string{"apps", "search", "--query", "fittrack", "--limit", "3", "--sort", "name:asc", "--sort", "rank:desc", "-f", "json"}, "")
+	if code != ExitSuccess {
+		t.Fatalf("exit code = %d, want %d; output=%q", code, ExitSuccess, out)
+	}
+	adam1 := strings.Index(out, `"adamId":1`) // Alpha, rank=2 — first inside Alpha group
+	adam2 := strings.Index(out, `"adamId":2`) // Alpha, rank=1
+	adam3 := strings.Index(out, `"adamId":3`) // Beta
+	if adam1 < 0 || adam2 < 0 || adam3 < 0 || adam1 > adam2 || adam2 > adam3 {
+		t.Fatalf("expected name asc then rank desc (Alpha rank=2, Alpha rank=1, Beta), got %q", out)
+	}
+}
+
+func TestIntegration_CustomCollectionCommands_LocalSort(t *testing.T) {
+	tests := []struct {
+		name       string
+		args       []string
+		wantPath   string
+		wantQuery  map[string]string
+		response   string
+		wantFirst  string
+		wantSecond string
+	}{
+		{
+			name:       "geo search",
+			args:       []string{"geo", "search", "--query", "luxembourg", "--limit", "2", "--sort", "name:asc", "-f", "json"},
+			wantPath:   "/api/v5/search/geo",
+			wantQuery:  map[string]string{"query": "luxembourg", "limit": "2"},
+			response:   `{"data":[{"id":"geo-2","name":"Zulu"},{"id":"geo-1","name":"Alpha"}]}`,
+			wantFirst:  `"name":"Alpha"`,
+			wantSecond: `"name":"Zulu"`,
+		},
+		{
+			name:       "orgs list",
+			args:       []string{"orgs", "list", "--sort", "orgName:asc", "-f", "json"},
+			wantPath:   "/api/v5/acls",
+			wantQuery:  map[string]string{},
+			response:   `{"data":[{"orgId":2,"orgName":"Zulu Org"},{"orgId":1,"orgName":"Alpha Org"}]}`,
+			wantFirst:  `"orgName":"Alpha Org"`,
+			wantSecond: `"orgName":"Zulu Org"`,
+		},
+		{
+			name:       "product pages list",
+			args:       []string{"product-pages", "list", "--adam-id", testAdamID, "--limit", "2", "--sort", "name:asc", "-f", "json"},
+			wantPath:   "/api/v5/apps/" + testAdamID + "/product-pages",
+			wantQuery:  map[string]string{"limit": "2"},
+			response:   `{"data":[{"id":"cpp-2","name":"Zulu Page"},{"id":"cpp-1","name":"Alpha Page"}]}`,
+			wantFirst:  `"name":"Alpha Page"`,
+			wantSecond: `"name":"Zulu Page"`,
+		},
+		{
+			name:       "product pages locales",
+			args:       []string{"product-pages", "locales", "--adam-id", testAdamID, "--product-page-id", testProductPageID, "--sort", "language:asc", "-f", "json"},
+			wantPath:   "/api/v5/apps/" + testAdamID + "/product-pages/" + testProductPageID + "/locale-details",
+			wantQuery:  map[string]string{},
+			response:   `{"data":[{"language":"fr-FR","name":"Zulu"},{"language":"en-US","name":"Alpha"}]}`,
+			wantFirst:  `"language":"en-US"`,
+			wantSecond: `"language":"fr-FR"`,
+		},
+		{
+			name:       "product pages countries",
+			args:       []string{"product-pages", "countries", "--sort", "countryOrRegion:asc", "-f", "json"},
+			wantPath:   "/api/v5/countries-or-regions",
+			wantQuery:  map[string]string{},
+			response:   `{"data":[{"countryOrRegion":"US","name":"United States"},{"countryOrRegion":"GB","name":"United Kingdom"}]}`,
+			wantFirst:  `"countryOrRegion":"GB"`,
+			wantSecond: `"countryOrRegion":"US"`,
+		},
+		{
+			name:       "product pages devices",
+			args:       []string{"product-pages", "devices", "--sort", "deviceClass:asc", "-f", "json"},
+			wantPath:   "/api/v5/creativeappmappings/devices",
+			wantQuery:  map[string]string{},
+			response:   `{"data":[{"deviceClass":"IPHONE","size":"6.7"},{"deviceClass":"IPAD","size":"13"}]}`,
+			wantFirst:  `"deviceClass":"IPAD"`,
+			wantSecond: `"deviceClass":"IPHONE"`,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			client := newCoverageClientWithCheck(
+				t,
+				http.MethodGet,
+				tc.wantPath,
+				tc.response,
+				func(req *http.Request) {
+					query := req.URL.Query()
+					for key, want := range tc.wantQuery {
+						if got := query.Get(key); got != want {
+							t.Fatalf("%s = %q, want %q", key, got, want)
+						}
+					}
+					if got := query.Get("sort"); got != "" {
+						t.Fatalf("unexpected remote sort query %q", got)
+					}
+					if got := query.Get("sortOrder"); got != "" {
+						t.Fatalf("unexpected remote sortOrder query %q", got)
+					}
+				},
+			)
+			restore := shared.SetClientForTesting(client, &config.Profile{OrgID: "123", DefaultCurrency: "USD"})
+			defer restore()
+
+			out, code := captureRun(t, tc.args, "")
+			if code != ExitSuccess {
+				t.Fatalf("exit code = %d, want %d; output=%q", code, ExitSuccess, out)
+			}
+			first := strings.Index(out, tc.wantFirst)
+			second := strings.Index(out, tc.wantSecond)
+			if first < 0 || second < 0 || first > second {
+				t.Fatalf("expected local sort order %q before %q, got %q", tc.wantFirst, tc.wantSecond, out)
+			}
+		})
+	}
+}
+
+func TestIntegration_BudgetOrdersList_LocalSort(t *testing.T) {
+	client := newCoverageClientWithCheck(
+		t,
+		http.MethodGet,
+		"/api/v5/budgetorders",
+		`{"data":[{"id":2,"name":"Zulu Budget","status":"ACTIVE"},{"id":1,"name":"Alpha Budget","status":"ACTIVE"}]}`,
+		func(req *http.Request) {
+			query := req.URL.Query()
+			if got := query.Get("limit"); got != "2" {
+				t.Fatalf("limit = %q, want %q", got, "2")
+			}
+			if got := query.Get("sort"); got != "" {
+				t.Fatalf("unexpected remote sort query %q", got)
+			}
+			if got := query.Get("sortOrder"); got != "" {
+				t.Fatalf("unexpected remote sortOrder query %q", got)
+			}
+		},
+	)
+	restore := shared.SetClientForTesting(client, &config.Profile{OrgID: "123", DefaultCurrency: "USD"})
+	defer restore()
+
+	out, code := captureRun(t, []string{"budgetorders", "list", "--limit", "2", "--sort", "name:asc", "-f", "json"}, "")
+	if code != ExitSuccess {
+		t.Fatalf("exit code = %d, want %d; output=%q", code, ExitSuccess, out)
+	}
+	alpha := strings.Index(out, `"name":"Alpha Budget"`)
+	zulu := strings.Index(out, `"name":"Zulu Budget"`)
+	if alpha < 0 || zulu < 0 || alpha > zulu {
+		t.Fatalf("expected local sort by name asc, got %q", out)
+	}
+}
+
+func TestIntegration_ProductPagesLocales_AdamIDFromStdin(t *testing.T) {
+	const adamID1 = "900001"
+	const adamID2 = "900002"
+	seen := map[string]int{}
+	client := newTestClient(func(req *http.Request) (*http.Response, error) {
+		if req.Method != http.MethodGet {
+			t.Fatalf("method = %s, want GET", req.Method)
+		}
+		switch req.URL.Path {
+		case "/api/v5/apps/" + adamID1 + "/product-pages/" + testProductPageID + "/locale-details":
+			seen[adamID1]++
+			return jsonResponse(`{"data":[{"language":"en-US","name":"Alpha"}]}`), nil
+		case "/api/v5/apps/" + adamID2 + "/product-pages/" + testProductPageID + "/locale-details":
+			seen[adamID2]++
+			return jsonResponse(`{"data":[{"language":"fr-FR","name":"Beta"}]}`), nil
+		default:
+			t.Fatalf("unexpected path %s", req.URL.Path)
+			return nil, nil
+		}
+	})
+	restore := shared.SetClientForTesting(client, &config.Profile{OrgID: "123", DefaultCurrency: "USD"})
+	defer restore()
+
+	stdin := adamID1 + "\n" + adamID2 + "\n"
+	out, code := captureRun(t, []string{
+		"product-pages", "locales",
+		"--adam-id", "-",
+		"--product-page-id", testProductPageID,
+		"-f", "json",
+	}, stdin)
+	if code != ExitSuccess {
+		t.Fatalf("exit code = %d, want %d; output=%q", code, ExitSuccess, out)
+	}
+	if seen[adamID1] != 1 || seen[adamID2] != 1 {
+		t.Fatalf("expected one request per adam-id, got %v", seen)
+	}
+	if !strings.Contains(out, `"en-US"`) || !strings.Contains(out, `"fr-FR"`) {
+		t.Fatalf("expected merged locales from both adam-ids, got %q", out)
+	}
+}
+
 func TestIntegration_ProfilesCreate_RequiresResolvedOrgID(t *testing.T) {
 	configDir := writeTempConfig(t, `
 default_profile: work

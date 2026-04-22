@@ -255,6 +255,12 @@ Shortcut flags build selector conditions automatically.
 As an alternate input form, `--from-json` also accepts `adamId`, `countryOrRegion`,
 `deviceClass`, `supplySource`, and `minAge`, which the CLI translates into selector conditions.
 `aads apps search` requires at least one of `--query` or `--only-owned-apps`.
+`aads apps search --sort` sorts the returned rows locally after fetching them.
+`aads geo search --sort`, `aads orgs list --sort`, and `aads product-pages {list,locales,countries,devices} --sort`
+sort the returned rows locally after fetching them.
+`aads budgetorders list --sort` sorts the returned rows locally after fetching them.
+Local sorts compare string values case-insensitively (`"Alpha"` sorts before `"beta"`);
+numeric and boolean fields are unaffected.
 
 Endpoint-specific query flags:
 

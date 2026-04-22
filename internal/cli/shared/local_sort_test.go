@@ -56,3 +56,75 @@ func TestApplyLocalSortsJSON_UsesMissingDefaults(t *testing.T) {
 		t.Fatalf("expected missing numeric field to sort as 0, got %s", text)
 	}
 }
+
+func TestApplyLocalSortsJSON_SortsStringsCaseInsensitively(t *testing.T) {
+	raw := json.RawMessage(`{"data":[
+		{"name":"beta"},
+		{"name":"Alpha"},
+		{"name":"zeta"}
+	]}`)
+
+	out, err := ApplyLocalSortsJSON(raw, stringSlice{"name:asc"})
+	if err != nil {
+		t.Fatalf("ApplyLocalSortsJSON error: %v", err)
+	}
+	text := string(out)
+	alpha := strings.Index(text, `"name":"Alpha"`)
+	beta := strings.Index(text, `"name":"beta"`)
+	zeta := strings.Index(text, `"name":"zeta"`)
+	if alpha < 0 || beta < 0 || zeta < 0 || alpha > beta || beta > zeta {
+		t.Fatalf("expected case-insensitive string sort, got %s", text)
+	}
+}
+
+func TestApplyLocalSortsJSON_SortsDescending(t *testing.T) {
+	raw := json.RawMessage(`{"data":[
+		{"name":"alpha"},
+		{"name":"zeta"},
+		{"name":"mu"}
+	]}`)
+
+	out, err := ApplyLocalSortsJSON(raw, stringSlice{"name:desc"})
+	if err != nil {
+		t.Fatalf("ApplyLocalSortsJSON error: %v", err)
+	}
+	text := string(out)
+	zeta := strings.Index(text, `"name":"zeta"`)
+	mu := strings.Index(text, `"name":"mu"`)
+	alpha := strings.Index(text, `"name":"alpha"`)
+	if zeta < 0 || mu < 0 || alpha < 0 || zeta > mu || mu > alpha {
+		t.Fatalf("expected descending name sort, got %s", text)
+	}
+}
+
+func TestApplyLocalSortsJSON_MultipleSortsAppliedInOrder(t *testing.T) {
+	raw := json.RawMessage(`{"data":[
+		{"team":"beta","score":5},
+		{"team":"alpha","score":10},
+		{"team":"alpha","score":1},
+		{"team":"beta","score":2}
+	]}`)
+
+	out, err := ApplyLocalSortsJSON(raw, stringSlice{"team:asc", "score:desc"})
+	if err != nil {
+		t.Fatalf("ApplyLocalSortsJSON error: %v", err)
+	}
+	text := string(out)
+	wantOrder := []string{
+		`"score":10,"team":"alpha"`,
+		`"score":1,"team":"alpha"`,
+		`"score":5,"team":"beta"`,
+		`"score":2,"team":"beta"`,
+	}
+	prev := -1
+	for _, fragment := range wantOrder {
+		idx := strings.Index(text, fragment)
+		if idx < 0 {
+			t.Fatalf("missing row %q in %s", fragment, text)
+		}
+		if idx < prev {
+			t.Fatalf("rows out of order at %q: got %s", fragment, text)
+		}
+		prev = idx
+	}
+}

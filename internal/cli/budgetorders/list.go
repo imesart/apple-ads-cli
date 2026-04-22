@@ -13,10 +13,12 @@ import (
 
 func listCmd() *ffcli.Command {
 	return shared.BuildListCommand(shared.ListCommandConfig{
-		Name:         "list",
-		ShortUsage:   "aads budgetorders list",
-		ShortHelp:    "List all budget orders.",
-		EntityIDName: "BUDGETORDERID",
+		Name:             "list",
+		ShortUsage:       "aads budgetorders list",
+		ShortHelp:        "List all budget orders.",
+		EntityIDName:     "BUDGETORDERID",
+		EnablePagination: true,
+		EnableLocalSort:  true,
 		Exec: func(ctx context.Context, client *api.Client, parentIDs map[string]string, limit int, offset int) (any, error) {
 			req := budgetorders.ListRequest{Limit: limit, Offset: offset}
 			if limit == 0 {

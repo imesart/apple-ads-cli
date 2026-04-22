@@ -126,12 +126,19 @@ type ListCommandConfig struct {
 	Name       string
 	ShortUsage string
 	ShortHelp  string
+	LongHelp   string
 	// ParentFlags defines required parent ID flags (e.g., campaign-id, adgroup-id).
 	ParentFlags []ParentFlag
 	// EntityIDName is the column name for the entity's "id" field in ids output
 	// (e.g., "CAMPAIGNID", "ADGROUPID"). If empty, inferred from hierarchy depth.
 	EntityIDName string
-	Exec         func(ctx context.Context, client *api.Client, parentIDs map[string]string, limit int, offset int) (any, error)
+	// EnablePagination registers --limit and --offset flags. When false,
+	// Exec receives limit=0 and offset=0 and the endpoint is called without pagination.
+	EnablePagination bool
+	// EnableLocalSort registers a repeatable --sort flag that is applied to the
+	// response after Exec returns. Use for endpoints without server-side sort support.
+	EnableLocalSort bool
+	Exec            func(ctx context.Context, client *api.Client, parentIDs map[string]string, limit int, offset int) (any, error)
 }
 
 // ParentFlag defines a required parent ID flag.
@@ -150,8 +157,20 @@ func BuildListCommand(config ListCommandConfig) *ffcli.Command {
 		parentPtrs[pf.Name] = fs.String(pf.Name, "", stdinUsage(pf.Usage, pf.Required))
 	}
 
-	limit := fs.Int("limit", 0, "Maximum results; 0 fetches all")
-	offset := fs.Int("offset", 0, "Starting offset")
+	var limit *int
+	var offset *int
+	if config.EnablePagination {
+		limit = fs.Int("limit", 0, "Maximum results; 0 fetches all")
+		offset = fs.Int("offset", 0, "Starting offset")
+	} else {
+		zero := 0
+		limit = &zero
+		offset = &zero
+	}
+	var localSorts *LocalSortFlags
+	if config.EnableLocalSort {
+		localSorts = BindLocalSortFlags(fs)
+	}
 	output := BindOutputFlags(fs)
 
 	entityIDName := config.EntityIDName
@@ -160,6 +179,7 @@ func BuildListCommand(config ListCommandConfig) *ffcli.Command {
 		Name:       config.Name,
 		ShortUsage: config.ShortUsage,
 		ShortHelp:  config.ShortHelp,
+		LongHelp:   config.LongHelp,
 		FlagSet:    fs,
 		Exec: func(ctx context.Context, args []string) error {
 			var allFlags []StdinFlag
@@ -190,6 +210,14 @@ func BuildListCommand(config ListCommandConfig) *ffcli.Command {
 				resp, err := config.Exec(ctx, client, parentIDs, *limit, *offset)
 				if err != nil {
 					return nil, fmt.Errorf("%s: %w", config.Name, err)
+				}
+				if localSorts != nil {
+					if values := localSorts.Values(); len(values) > 0 {
+						resp, err = applyLocalListSorts(resp, stringSlice(values), entityIDName)
+						if err != nil {
+							return nil, fmt.Errorf("%s: %w", config.Name, err)
+						}
+					}
 				}
 
 				return resp, nil

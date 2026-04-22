@@ -38,6 +38,7 @@ func searchCmd() *ffcli.Command {
 	countryCode := fs.String("country-code", "", "Country code, ISO 3166-1 alpha-2")
 	limit := fs.Int("limit", 0, "Maximum results; 0 fetches all pages")
 	offset := fs.Int("offset", 0, "Starting offset")
+	sorts := shared.BindLocalSortFlags(fs)
 	output := shared.BindOutputFlags(fs)
 
 	return &ffcli.Command{
@@ -66,6 +67,7 @@ func searchCmd() *ffcli.Command {
 				Limit:       *limit,
 				Offset:      *offset,
 			}
+			var result json.RawMessage
 			if *limit == 0 {
 				rows, err := api.FetchAll[json.RawMessage](ctx, client, req)
 				if err != nil {
@@ -75,13 +77,15 @@ func searchCmd() *ffcli.Command {
 				if err != nil {
 					return fmt.Errorf("search: marshalling fetched rows: %w", err)
 				}
-				return shared.PrintOutput(json.RawMessage(data), *output.Output, *output.Fields, *output.Pretty)
+				result = json.RawMessage(data)
+			} else {
+				if err := client.Do(ctx, req, &result); err != nil {
+					return fmt.Errorf("search: %w", err)
+				}
 			}
-
-			var result json.RawMessage
-			err = client.Do(ctx, req, &result)
+			result, err = shared.MaybeApplyLocalSorts(result, sorts.Values(), "search")
 			if err != nil {
-				return fmt.Errorf("search: %w", err)
+				return err
 			}
 
 			return shared.PrintOutput(result, *output.Output, *output.Fields, *output.Pretty)

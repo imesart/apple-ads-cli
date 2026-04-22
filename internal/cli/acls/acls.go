@@ -8,6 +8,7 @@ import (
 
 	"github.com/peterbourgon/ff/v3/ffcli"
 
+	"github.com/imesart/apple-ads-cli/internal/api"
 	"github.com/imesart/apple-ads-cli/internal/api/requests/acls"
 	"github.com/imesart/apple-ads-cli/internal/cli/shared"
 )
@@ -29,32 +30,18 @@ func Command() *ffcli.Command {
 }
 
 func listCmd() *ffcli.Command {
-	fs := flag.NewFlagSet("list", flag.ContinueOnError)
-	output := shared.BindOutputFlags(fs)
-
-	return &ffcli.Command{
-		Name:       "list",
-		ShortUsage: "aads orgs list",
-		ShortHelp:  "List organizations (Apple Ads ACLs).",
-		FlagSet:    fs,
-		Exec: func(ctx context.Context, args []string) error {
-			client, err := shared.GetClient()
-			if err != nil {
-				return fmt.Errorf("list: %w", err)
-			}
-
-			ctx, cancel := shared.ContextWithTimeout(ctx)
-			defer cancel()
-
+	return shared.BuildListCommand(shared.ListCommandConfig{
+		Name:             "list",
+		ShortUsage:       "aads orgs list",
+		ShortHelp:        "List organizations (Apple Ads ACLs).",
+		EnablePagination: false,
+		EnableLocalSort:  true,
+		Exec: func(ctx context.Context, client *api.Client, parentIDs map[string]string, limit int, offset int) (any, error) {
 			var result json.RawMessage
-			err = client.Do(ctx, acls.ListRequest{}, &result)
-			if err != nil {
-				return fmt.Errorf("list: %w", err)
-			}
-
-			return shared.PrintOutput(result, *output.Output, *output.Fields, *output.Pretty)
+			err := client.Do(ctx, acls.ListRequest{}, &result)
+			return result, err
 		},
-	}
+	})
 }
 
 func userCmd() *ffcli.Command {

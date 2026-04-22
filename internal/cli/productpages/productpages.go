@@ -40,6 +40,7 @@ func listCmd() *ffcli.Command {
 	offset := fs.Int("offset", 0, "Starting offset")
 	var filters repeatedStrings
 	fs.Var(&filters, "filter", `Filter query: "name=value" or "state=value" (repeatable)`)
+	sorts := shared.BindLocalSortFlags(fs)
 	output := shared.BindOutputFlags(fs)
 
 	return &ffcli.Command{
@@ -72,12 +73,19 @@ func listCmd() *ffcli.Command {
 					Limit:  *limit,
 					Offset: *offset,
 				}
-				if *limit == 0 {
-					return api.FetchAllRaw(ctx, client, req)
-				}
 				var result json.RawMessage
-				err = client.Do(ctx, req, &result)
-				return result, err
+				if *limit == 0 {
+					resp, err := api.FetchAllRaw(ctx, client, req)
+					if err != nil {
+						return nil, err
+					}
+					result = resp
+				} else {
+					if err := client.Do(ctx, req, &result); err != nil {
+						return nil, err
+					}
+				}
+				return shared.MaybeApplyLocalSorts(result, sorts.Values(), "list")
 			}
 			if len(stdinFlags) > 0 {
 				return shared.RunWithStdin(stdinFlags, execOnce, *output.Output, *output.Fields, *output.Pretty, "PRODUCTPAGEID")
@@ -135,51 +143,31 @@ func getCmd() *ffcli.Command {
 }
 
 func localesCmd() *ffcli.Command {
-	fs := flag.NewFlagSet("locales", flag.ContinueOnError)
-	adamID := fs.String("adam-id", "", "App Adam ID")
-	productPageID := fs.String("product-page-id", "", "Product Page ID")
-	output := shared.BindOutputFlags(fs)
-
-	return &ffcli.Command{
+	return shared.BuildListCommand(shared.ListCommandConfig{
 		Name:       "locales",
 		ShortUsage: "aads product-pages locales --adam-id ID --product-page-id PPID",
 		ShortHelp:  "Get product page locales.",
-		FlagSet:    fs,
-		Exec: func(ctx context.Context, args []string) error {
-			aid := strings.TrimSpace(*adamID)
-			if aid == "" {
-				return shared.UsageErrorf("--adam-id is required")
-			}
-			ppid := strings.TrimSpace(*productPageID)
-			if ppid == "" {
-				return shared.UsageErrorf("--product-page-id is required")
-			}
-
-			client, err := shared.GetClient()
-			if err != nil {
-				return fmt.Errorf("locales: %w", err)
-			}
-
-			ctx, cancel := shared.ContextWithTimeout(ctx)
-			defer cancel()
-
-			var result json.RawMessage
-			err = client.Do(ctx, productpages.LocalesRequest{
-				AdamID:        aid,
-				ProductPageID: ppid,
-			}, &result)
-			if err != nil {
-				return fmt.Errorf("locales: %w", err)
-			}
-
-			return shared.PrintOutput(result, *output.Output, *output.Fields, *output.Pretty)
+		ParentFlags: []shared.ParentFlag{
+			{Name: "adam-id", Usage: "App Adam ID", Required: true},
+			{Name: "product-page-id", Usage: "Product Page ID", Required: true},
 		},
-	}
+		EnablePagination: false,
+		EnableLocalSort:  true,
+		Exec: func(ctx context.Context, client *api.Client, parentIDs map[string]string, limit int, offset int) (any, error) {
+			var result json.RawMessage
+			err := client.Do(ctx, productpages.LocalesRequest{
+				AdamID:        parentIDs["adam-id"],
+				ProductPageID: parentIDs["product-page-id"],
+			}, &result)
+			return result, err
+		},
+	})
 }
 
 func countriesCmd() *ffcli.Command {
 	fs := flag.NewFlagSet("countries", flag.ContinueOnError)
 	countriesOrRegions := fs.String("countries-or-regions", "", "Comma-separated ISO alpha-2 country or region codes")
+	sorts := shared.BindLocalSortFlags(fs)
 	output := shared.BindOutputFlags(fs)
 
 	return &ffcli.Command{
@@ -202,6 +190,10 @@ func countriesCmd() *ffcli.Command {
 			}, &result)
 			if err != nil {
 				return fmt.Errorf("countries: %w", err)
+			}
+			result, err = shared.MaybeApplyLocalSorts(result, sorts.Values(), "countries")
+			if err != nil {
+				return err
 			}
 
 			return shared.PrintOutput(result, *output.Output, *output.Fields, *output.Pretty)
@@ -247,30 +239,16 @@ func productPageFilterQuery(filters []string) (map[string]string, error) {
 }
 
 func devicesCmd() *ffcli.Command {
-	fs := flag.NewFlagSet("devices", flag.ContinueOnError)
-	output := shared.BindOutputFlags(fs)
-
-	return &ffcli.Command{
-		Name:       "devices",
-		ShortUsage: "aads product-pages devices",
-		ShortHelp:  "Get app preview device sizes.",
-		FlagSet:    fs,
-		Exec: func(ctx context.Context, args []string) error {
-			client, err := shared.GetClient()
-			if err != nil {
-				return fmt.Errorf("devices: %w", err)
-			}
-
-			ctx, cancel := shared.ContextWithTimeout(ctx)
-			defer cancel()
-
+	return shared.BuildListCommand(shared.ListCommandConfig{
+		Name:             "devices",
+		ShortUsage:       "aads product-pages devices",
+		ShortHelp:        "Get app preview device sizes.",
+		EnablePagination: false,
+		EnableLocalSort:  true,
+		Exec: func(ctx context.Context, client *api.Client, parentIDs map[string]string, limit int, offset int) (any, error) {
 			var result json.RawMessage
-			err = client.Do(ctx, productpages.DevicesRequest{}, &result)
-			if err != nil {
-				return fmt.Errorf("devices: %w", err)
-			}
-
-			return shared.PrintOutput(result, *output.Output, *output.Fields, *output.Pretty)
+			err := client.Do(ctx, productpages.DevicesRequest{}, &result)
+			return result, err
 		},
-	}
+	})
 }

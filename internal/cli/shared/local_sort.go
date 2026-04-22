@@ -77,6 +77,20 @@ func applyLocalListSorts(resp any, sorts stringSlice, entityIDName string) (any,
 	return sorted, nil
 }
 
+// MaybeApplyLocalSorts applies local sorts to raw when sorts is non-empty.
+// Any error is wrapped with opName as a prefix. Callers for commands whose
+// endpoint does not accept server-side sort use this to keep --sort logic terse.
+func MaybeApplyLocalSorts(raw json.RawMessage, sorts []string, opName string) (json.RawMessage, error) {
+	if len(sorts) == 0 {
+		return raw, nil
+	}
+	sorted, err := ApplyLocalSortsJSON(raw, sorts)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", opName, err)
+	}
+	return sorted, nil
+}
+
 // ApplyLocalSortsJSON sorts a standard {"data":[...]} JSON envelope locally.
 // Sort keys use the same field normalization as local filters and are applied
 // in the order the user provided them.
@@ -233,7 +247,7 @@ func compareLocalSortValues(left, right map[string]any, spec *localFieldSpec) in
 			return 0
 		}
 	default:
-		return strings.Compare(toLocalString(leftValue), toLocalString(rightValue))
+		return strings.Compare(strings.ToLower(toLocalString(leftValue)), strings.ToLower(toLocalString(rightValue)))
 	}
 }
 
