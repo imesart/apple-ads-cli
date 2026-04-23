@@ -28,7 +28,7 @@ Filter operators:
 Searchable and filterable fields:
   id, orgId, name, adamId, status, servingStatus, displayStatus,
   adChannelType, supplySources, billingEvent, paymentModel,
-  countriesOrRegions, budgetAmount, dailyBudgetAmount
+  countriesOrRegions, budgetAmount, dailyBudgetAmount, targetCpa
 
 Selector JSON keys: conditions, fields, orderBy, pagination.
 

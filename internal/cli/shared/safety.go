@@ -99,14 +99,15 @@ func CheckBudgetLimitJSON(body json.RawMessage) error {
 	return CheckBudgetAmountLimit(payload.BudgetAmount)
 }
 
-// CheckBidLimitJSON checks a raw JSON body for bid and CPA goal safety limits.
+// CheckBidLimitJSON checks a raw JSON body for bid and CPA safety limits.
 // Validates bidAmount and defaultBidAmount against max_bid, and
-// cpaGoal against max_cpa_goal.
+// cpaGoal/targetCpa against max_cpa_goal.
 func CheckBidLimitJSON(body json.RawMessage) error {
 	var payload struct {
 		BidAmount        *types.Money `json:"bidAmount"`
 		DefaultBidAmount *types.Money `json:"defaultBidAmount"`
 		CPAGoal          *types.Money `json:"cpaGoal"`
+		TargetCpa        *types.Money `json:"targetCpa"`
 	}
 	if err := json.Unmarshal(body, &payload); err != nil {
 		return nil
@@ -117,5 +118,8 @@ func CheckBidLimitJSON(body json.RawMessage) error {
 	if err := CheckBidLimit(payload.DefaultBidAmount); err != nil {
 		return err
 	}
-	return CheckCPAGoalLimit(payload.CPAGoal)
+	if err := CheckCPAGoalLimit(payload.CPAGoal); err != nil {
+		return err
+	}
+	return CheckCPAGoalLimit(payload.TargetCpa)
 }

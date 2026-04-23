@@ -7,6 +7,7 @@ type CampaignUpdateProperties struct {
 	BudgetAmount       *Money             `json:"budgetAmount,omitempty"`
 	BudgetOrders       []int64            `json:"budgetOrders,omitempty"`
 	DailyBudgetAmount  *Money             `json:"dailyBudgetAmount,omitempty"`
+	TargetCpa          *Money             `json:"targetCpa,omitempty"`
 	CountriesOrRegions []string           `json:"countriesOrRegions,omitempty"`
 	LOCInvoiceDetails  *LOCInvoiceDetails `json:"locInvoiceDetails,omitempty"`
 	StartTime          *string            `json:"startTime,omitempty"`

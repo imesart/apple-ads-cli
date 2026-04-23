@@ -139,6 +139,7 @@ type Campaign struct {
 	BillingEvent                       CampaignBillingEventType                                `json:"billingEvent"`
 	BudgetAmount                       *Money                                                  `json:"budgetAmount,omitempty"`
 	DailyBudgetAmount                  Money                                                   `json:"dailyBudgetAmount"`
+	TargetCpa                          *Money                                                  `json:"targetCpa,omitempty"`
 	BudgetOrders                       []int64                                                 `json:"budgetOrders,omitempty"`
 	PaymentModel                       *PaymentModel                                           `json:"paymentModel,omitempty"`
 	LOCInvoiceDetails                  *LOCInvoiceDetails                                      `json:"locInvoiceDetails,omitempty"`

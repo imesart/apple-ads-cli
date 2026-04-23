@@ -197,3 +197,11 @@ func TestCheckBidLimitJSON_CPAGoal(t *testing.T) {
 		t.Errorf("CheckBidLimitJSON with cpaGoal without config = %v, want nil", err)
 	}
 }
+
+func TestCheckBidLimitJSON_TargetCPA(t *testing.T) {
+	body := json.RawMessage(`{"targetCpa":{"amount":"10.00","currency":"USD"}}`)
+	err := CheckBidLimitJSON(body)
+	if err != nil {
+		t.Errorf("CheckBidLimitJSON with targetCpa without config = %v, want nil", err)
+	}
+}

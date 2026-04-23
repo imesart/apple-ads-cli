@@ -18,6 +18,7 @@ import (
 	keywordsreq "github.com/imesart/apple-ads-cli/internal/api/requests/keywords"
 	negadgroupreq "github.com/imesart/apple-ads-cli/internal/api/requests/negatives_adgroup"
 	negcampaignreq "github.com/imesart/apple-ads-cli/internal/api/requests/negatives_campaign"
+	campaignscli "github.com/imesart/apple-ads-cli/internal/cli/campaigns"
 	"github.com/imesart/apple-ads-cli/internal/cli/shared"
 	"github.com/imesart/apple-ads-cli/internal/config"
 )
@@ -81,6 +82,7 @@ func importCmd() *ffcli.Command {
 	fs.StringVar(&flags.dailyBudgetAmount, "daily-budget-amount", "", "Override dailyBudgetAmount for created campaigns")
 	fs.StringVar(&flags.countriesOrRegions, "countries-or-regions", "", "Override countriesOrRegions for created campaigns")
 	fs.StringVar(&flags.budgetAmount, "budget-amount", "", "DEPRECATED: Override budgetAmount for created campaigns")
+	fs.StringVar(&flags.targetCpa, "target-cpa", "", "Override campaign targetCpa")
 	fs.StringVar(&flags.locInvoiceDetails, "loc-invoice-details", "", `Override locInvoiceDetails JSON: inline JSON, @file.json, or @- for stdin`)
 	fs.StringVar(&flags.campaignsStatus, "campaigns-status", "", "Override campaign status")
 	fs.StringVar(&flags.campaignsStartTime, "campaigns-start-time", "", "Override campaign startTime")
@@ -408,6 +410,13 @@ func resolveCampaignPayload(ctx context.Context, client *api.Client, cfg *config
 		}
 		payload["budgetAmount"] = money
 	}
+	if flags.targetCpa != "" {
+		money, err := shared.ParseMoneyFlag(flags.targetCpa)
+		if err != nil {
+			return nil, err
+		}
+		payload["targetCpa"] = money
+	}
 	if locInvoiceDetails != nil {
 		payload["locInvoiceDetails"] = locInvoiceDetails
 	}
@@ -471,7 +480,7 @@ func resolveCampaignPayload(ctx context.Context, client *api.Client, cfg *config
 	if err := ensureRequiredFieldsWithFlags("campaign", payload, campaignRequiredFields, campaignRequiredFieldFlags); err != nil {
 		return nil, err
 	}
-	if err := shared.CheckBudgetLimitJSON(mustMarshalRaw(payload)); err != nil {
+	if err := campaignscli.ValidatePayload(ctx, client, mustMarshalRaw(payload), ""); err != nil {
 		return nil, err
 	}
 	return payload, nil

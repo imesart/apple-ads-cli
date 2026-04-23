@@ -78,6 +78,9 @@
         "budgetAmount": {
           "$ref": "#/$defs/money"
         },
+        "targetCpa": {
+          "$ref": "#/$defs/money"
+        },
         "supplySources": {
           "type": "array",
           "items": {

@@ -758,6 +758,35 @@ func TestCampaignsCreateLOCInvoiceDetailsFlagPayload(t *testing.T) {
 	}
 }
 
+func TestCampaignsCreateTargetCPAFlagPayload(t *testing.T) {
+	client := newTestClient(recordingTransport(t, http.MethodPost, "/api/v5/campaigns", func(body []byte) *http.Response {
+		got := mustUnmarshalMap(t, body)
+		cpa, ok := got["targetCpa"].(map[string]any)
+		if !ok {
+			t.Fatalf("targetCpa = %v", got["targetCpa"])
+		}
+		if cpa["amount"] != "10.50" || cpa["currency"] != "USD" {
+			t.Fatalf("targetCpa = %v", cpa)
+		}
+		return jsonResponse(`{"data":{"id":123}}`)
+	}))
+	restore := shared.SetClientForTesting(client, &config.Profile{OrgID: "123", DefaultCurrency: "USD"})
+	defer restore()
+
+	out, code := captureRun(t, []string{
+		"campaigns", "create",
+		"--name", "My Campaign",
+		"--adam-id", testAdamID,
+		"--daily-budget-amount", "5",
+		"--target-cpa", "10.50",
+		"--countries-or-regions", "US",
+		"--ad-channel-type", "SEARCH",
+	}, "")
+	if code != ExitSuccess {
+		t.Fatalf("exit code = %d, want %d; output=%q", code, ExitSuccess, out)
+	}
+}
+
 func TestCampaignsCreateNameTemplate(t *testing.T) {
 	client := newTestClient(recordingTransport(t, http.MethodPost, "/api/v5/campaigns", func(body []byte) *http.Response {
 		got := mustUnmarshalMap(t, body)
@@ -814,6 +843,92 @@ func TestCampaignsUpdateFlagPayload(t *testing.T) {
 	}, "")
 	if code != ExitSuccess {
 		t.Fatalf("exit code = %d, want %d; output=%q", code, ExitSuccess, out)
+	}
+}
+
+func TestCampaignsUpdateTargetCPAFlagPayload(t *testing.T) {
+	client := newTestClient(func(req *http.Request) (*http.Response, error) {
+		switch {
+		case req.Method == http.MethodGet && req.URL.Path == "/api/v5/campaigns/123":
+			return jsonResponse(`{"data":{"id":123,"adChannelType":"SEARCH"}}`), nil
+		case req.Method == http.MethodPut && req.URL.Path == "/api/v5/campaigns/123":
+			body, _ := io.ReadAll(req.Body)
+			got := mustUnmarshalMap(t, body)
+			campaign, ok := got["campaign"].(map[string]any)
+			if !ok {
+				t.Fatalf("expected campaign wrapper, got %v", got)
+			}
+			cpa, ok := campaign["targetCpa"].(map[string]any)
+			if !ok {
+				t.Fatalf("targetCpa = %v", campaign["targetCpa"])
+			}
+			if cpa["amount"] != "12.25" || cpa["currency"] != "USD" {
+				t.Fatalf("targetCpa = %v", cpa)
+			}
+			return jsonResponse(`{"data":{"id":123}}`), nil
+		default:
+			t.Fatalf("unexpected request %s %s", req.Method, req.URL.Path)
+			return nil, nil
+		}
+	})
+	restore := shared.SetClientForTesting(client, &config.Profile{OrgID: "123", DefaultCurrency: "USD"})
+	defer restore()
+
+	out, code := captureRun(t, []string{
+		"campaigns", "update",
+		"--campaign-id", "123",
+		"--target-cpa", "12.25",
+	}, "")
+	if code != ExitSuccess {
+		t.Fatalf("exit code = %d, want %d; output=%q", code, ExitSuccess, out)
+	}
+}
+
+func TestCampaignsCreateTargetCPARejectsDisplayCampaign(t *testing.T) {
+	restore := shared.SetClientForTesting(newTestClient(func(req *http.Request) (*http.Response, error) {
+		t.Fatalf("unexpected request %s %s", req.Method, req.URL.Path)
+		return nil, nil
+	}), &config.Profile{OrgID: "123", DefaultCurrency: "USD"})
+	defer restore()
+
+	out, code := captureRun(t, []string{
+		"campaigns", "create",
+		"--name", "Display Campaign",
+		"--adam-id", testAdamID,
+		"--daily-budget-amount", "5",
+		"--target-cpa", "10",
+		"--countries-or-regions", "US",
+		"--ad-channel-type", "DISPLAY",
+	}, "")
+	if code != ExitUsage {
+		t.Fatalf("exit code = %d, want %d; output=%q", code, ExitUsage, out)
+	}
+	if !strings.Contains(out, "targetCpa is supported only for SEARCH campaigns") {
+		t.Fatalf("expected targetCpa validation error, got %q", out)
+	}
+}
+
+func TestCampaignsUpdateTargetCPARejectsDisplayCampaign(t *testing.T) {
+	client := newTestClient(func(req *http.Request) (*http.Response, error) {
+		if req.Method == http.MethodGet && req.URL.Path == "/api/v5/campaigns/123" {
+			return jsonResponse(`{"data":{"id":123,"adChannelType":"DISPLAY"}}`), nil
+		}
+		t.Fatalf("unexpected request %s %s", req.Method, req.URL.Path)
+		return nil, nil
+	})
+	restore := shared.SetClientForTesting(client, &config.Profile{OrgID: "123", DefaultCurrency: "USD"})
+	defer restore()
+
+	out, code := captureRun(t, []string{
+		"campaigns", "update",
+		"--campaign-id", "123",
+		"--target-cpa", "12.25",
+	}, "")
+	if code != ExitUsage {
+		t.Fatalf("exit code = %d, want %d; output=%q", code, ExitUsage, out)
+	}
+	if !strings.Contains(out, "targetCpa is supported only for SEARCH campaigns") {
+		t.Fatalf("expected targetCpa validation error, got %q", out)
 	}
 }
 
@@ -1511,6 +1626,35 @@ func TestCampaignsCreateDailyBudgetSafetyLimit(t *testing.T) {
 		"--name", "Over Limit",
 		"--adam-id", testAdamID,
 		"--daily-budget-amount", "15",
+		"--countries-or-regions", "US",
+		"--ad-channel-type", "SEARCH",
+	}, "")
+	if code != ExitSafetyLimit {
+		t.Fatalf("exit code = %d, want %d; output=%q", code, ExitSafetyLimit, out)
+	}
+	if !strings.Contains(out, "exceeds limit") {
+		t.Fatalf("expected safety limit error, got %q", out)
+	}
+}
+
+func TestCampaignsCreateTargetCPASafetyLimit(t *testing.T) {
+	client := newTestClient(func(req *http.Request) (*http.Response, error) {
+		t.Fatalf("request should not be sent when target CPA exceeds safety limit")
+		return nil, nil
+	})
+	restore := shared.SetClientForTesting(client, &config.Profile{
+		OrgID:           "123",
+		DefaultCurrency: "USD",
+		MaxCPAGoal:      config.DecimalText("10"),
+	})
+	defer restore()
+
+	out, code := captureRun(t, []string{
+		"campaigns", "create",
+		"--name", "Over CPA Limit",
+		"--adam-id", testAdamID,
+		"--daily-budget-amount", "15",
+		"--target-cpa", "15",
 		"--countries-or-regions", "US",
 		"--ad-channel-type", "SEARCH",
 	}, "")

@@ -516,7 +516,7 @@ max_daily_budget: "1000.00"
 max_bid: "10.00"
 ```
 
-- `campaigns create` / `campaigns update`: validates `dailyBudgetAmount` and `budgetAmount` against `max_daily_budget` (via `CheckBudgetLimitJSON`)
+- `campaigns create` / `campaigns update`: validates `dailyBudgetAmount` and `budgetAmount` against the budget profile limits and `targetCpa` against `max_cpa_goal` (via `CheckBudgetLimitJSON` / `CheckBidLimitJSON`)
 - `keywords create` / `keywords update`: validates `bidAmount` against `max_bid` (via `CheckBidLimitJSON`)
 - `adgroups create` / `adgroups update`: validates `defaultBidAmount` against `max_bid` (via `CheckBidLimitJSON`)
 - Profile limits are always interpreted in `default_currency`
@@ -532,7 +532,7 @@ All create and update commands support shortcut flags as an alternative to `--fr
 
 | Command | Required flags | Optional flags |
 |---|---|---|
-| `campaigns create` | `--name`, `--adam-id`, `--daily-budget-amount`, `--countries-or-regions` | `--budget-amount` (deprecated), `--loc-invoice-details`, `--ad-channel-type` (SEARCH), `--supply-sources` (APPSTORE_SEARCH_RESULTS), `--billing-event` (TAPS), `--status`, `--start-time`, `--end-time` |
+| `campaigns create` | `--name`, `--adam-id`, `--daily-budget-amount`, `--countries-or-regions` | `--budget-amount` (deprecated), `--target-cpa` (Search only), `--loc-invoice-details`, `--ad-channel-type` (SEARCH), `--supply-sources` (APPSTORE_SEARCH_RESULTS), `--billing-event` (TAPS), `--status`, `--start-time`, `--end-time` |
 | `adgroups create` | `--campaign-id`, `--name`, `--default-bid` | `--status`, `--start-time`, `--end-time`, `--automated-keywords-opt-in`, `--cpa-goal` (Search only), `--age`, `--gender`, `--device-class`, `--country-code`, `--admin-area`, `--locality` |
 | `keywords create` | `--campaign-id`, `--adgroup-id`, `--text` | `--match-type` (EXACT), `--bid`, `--status` |
 | `negatives create` | `--campaign-id`, `--text` | `--adgroup-id`, `--match-type` (EXACT), `--status` |
@@ -545,7 +545,7 @@ All create and update commands support shortcut flags as an alternative to `--fr
 
 | Command | ID flags | Shortcut flags |
 |---|---|---|
-| `campaigns update` | `--campaign-id` | `--status`, `--name`, `--budget-amount` (deprecated), `--daily-budget-amount`, `--loc-invoice-details`, `--countries-or-regions` |
+| `campaigns update` | `--campaign-id` | `--status`, `--name`, `--budget-amount` (deprecated), `--daily-budget-amount`, `--target-cpa` (Search only), `--loc-invoice-details`, `--countries-or-regions` |
 | `adgroups update` | `--campaign-id`, `--adgroup-id` | `--default-bid`, `--update-inherited-bids` (requires `--default-bid`), `--cpa-goal` (Search only), `--status`, `--name`, `--start-time`, `--end-time`, `--merge` |
 | `keywords update` | `--campaign-id`, `--adgroup-id`, `--keyword-id` | `--bid`, `--status` |
 | `negatives update` | `--campaign-id`, `--keyword-id` | `--adgroup-id`, `--status` |
@@ -565,6 +565,7 @@ All create and update commands support shortcut flags as an alternative to `--fr
 - **Budget order envelope**: Shortcut flags automatically wrap in `{"orgIds": [...], "bo": {...}}` using `--org-id` or config `org_id`.
 - **Campaign update envelope**: Automatically wraps in `{"campaign": {...}}`.
 - **CPA goal validation**: `--cpa-goal` fetches the campaign to verify `adChannelType` is `SEARCH` before proceeding.
+- **Campaign target CPA validation**: `--target-cpa` requires a `SEARCH` campaign. `campaigns update --target-cpa` fetches the current campaign when needed to verify `adChannelType`.
 
 ## Structure Export and Import
 
@@ -579,7 +580,7 @@ All create and update commands support shortcut flags as an alternative to `--fr
 - `--campaign-id` directly selects one campaign to export and supports `-` for stdin-driven campaign ID pipelines.
 - `--shareable` applies a shareable-export preset: omit keywords, negatives, `adamId`, budget/bid/CPA/invoice fields, `startTime`, and `endTime`, and redact names.
 - `--no-adam-id` omits `campaign.adamId` from the exported structure JSON.
-- `--no-budgets` omits campaign budget/invoice fields, ad group bid/CPA fields, and keyword bid fields unless explicitly requested by `--campaigns-fields`, `--adgroups-fields`, or `--keywords-fields`.
+- `--no-budgets` omits campaign budget/CPA/invoice fields, ad group bid/CPA fields, and keyword bid fields unless explicitly requested by `--campaigns-fields`, `--adgroups-fields`, or `--keywords-fields`.
 - `--no-times` omits campaign/ad group `startTime` and `endTime` from exported structure JSON unless the relevant fields are explicitly requested by `--campaigns-fields` or `--adgroups-fields`.
 - `--redact-names` rewrites exported campaign/ad group names to safer placeholders when high-confidence matches are found.
 - `--no-negatives` skips campaign and ad group negative keyword export.
@@ -601,7 +602,7 @@ All create and update commands support shortcut flags as an alternative to `--fr
 - With `--redact-names`, campaign-name redaction may replace bounded matches of the fetched app name with `%(appName)`, bounded or conservative fuzzy prefix matches of the fetched app short name with `%(appNameShort)`, and exact rendered country-list matches with `%(countriesOrRegions)`. The derived `appNameShort` uses the same separator rules as export-side name redaction.
 - With `--redact-names`, ad group names may replace bounded exact matches of the original campaign name with `%(campaignName)` and apply the same app/app-short-name redaction rules as campaigns, but do not replace countries.
 - `--redact-names` fetches app details from campaign `adamId` and fails the export if the lookup fails.
-- `--no-budgets` may omit `dailyBudgetAmount`, `budgetAmount`, `locInvoiceDetails`, and `budgetOrders` on campaigns, `defaultBidAmount` and `cpaGoal` on ad groups, and `bidAmount` on keywords unless explicitly re-requested.
+- `--no-budgets` may omit `dailyBudgetAmount`, `budgetAmount`, `targetCpa`, `locInvoiceDetails`, and `budgetOrders` on campaigns, `defaultBidAmount` and `cpaGoal` on ad groups, and `bidAmount` on keywords unless explicitly re-requested.
 - Normalized campaign export preserves non-default `adChannelType`, `billingEvent`, `supplySources`, and non-empty `biddingStrategy`.
 - Normalized ad group export preserves non-default/non-empty `pricingModel`, `automatedKeywordsOptIn`, `cpaGoal`, `paymentModel`, and `biddingStrategy`.
 - `--campaigns-fields`, `--adgroups-fields`, `--keywords-fields`, `--campaigns-negatives-fields`, and `--adgroups-negatives-fields` change what is exported.
@@ -635,6 +636,8 @@ All create and update commands support shortcut flags as an alternative to `--fr
 - `--campaigns-from-json` and `--adgroups-from-json` apply the same override object to every created campaign/ad group of that type.
 - Override JSON flags accept inline JSON, `@file.json`, or `@-` for stdin.
 - `--budget-amount` is a deprecated campaign override flag for structure imports.
+- `--target-cpa` overrides campaign `targetCpa` for structure imports.
+- Imported campaign `targetCpa` is validated with the same SEARCH-only and `max_cpa_goal` rules used by `campaigns create` and `campaigns update`.
 - Override JSON must not include read-only or relationship fields; those are rejected as invalid input.
 - Imported structure data may include read-only and relationship fields; import ignores those fields before request construction.
 - Relationship fields are always re-bound during import. For example, imported `campaignId` / `adGroupId` values do not control the destination hierarchy.

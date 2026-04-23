@@ -107,6 +107,7 @@ type importFlags struct {
 	dailyBudgetAmount         string
 	countriesOrRegions        string
 	budgetAmount              string
+	targetCpa                 string
 	locInvoiceDetails         string
 	campaignsStatus           string
 	campaignsStartTime        string
@@ -191,7 +192,7 @@ var (
 
 	campaignAllowedFields = stringSet(
 		"adamId", "name", "adChannelType", "countriesOrRegions", "billingEvent",
-		"dailyBudgetAmount", "budgetAmount", "supplySources", "biddingStrategy", "status",
+		"dailyBudgetAmount", "budgetAmount", "targetCpa", "supplySources", "biddingStrategy", "status",
 		"startTime", "endTime", "locInvoiceDetails",
 	)
 	adgroupAllowedFields = stringSet(

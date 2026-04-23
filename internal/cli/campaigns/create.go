@@ -24,6 +24,7 @@ func createCmd() *ffcli.Command {
 	adamID := fs.String("adam-id", "", "App Store app ID (required)")
 	dailyBudget := fs.String("daily-budget-amount", "", "Daily budget (AMOUNT or \"AMOUNT CURRENCY\"; bare amount uses default currency) (required)")
 	budgetAmt := fs.String("budget-amount", "", "DEPRECATED: Total budget (AMOUNT or \"AMOUNT CURRENCY\"; bare amount uses default currency)")
+	targetCpa := fs.String("target-cpa", "", "Target CPA (AMOUNT or \"AMOUNT CURRENCY\"; bare amount uses default currency); SEARCH only")
 	locInvoiceDetails := fs.String("loc-invoice-details", "", `LOC invoice details JSON: inline JSON, @file.json, or @- for stdin`)
 	countries := fs.String("countries-or-regions", "", "Comma-separated country codes (required)")
 	adChannelType := fs.String("ad-channel-type", "SEARCH", "SEARCH (default) | DISPLAY")
@@ -51,6 +52,7 @@ JSON keys (for --from-json):
   billingEvent        string    TAPS (default) | IMPRESSIONS
   dailyBudgetAmount   Money     (required) Daily budget cap
   budgetAmount        Money     DEPRECATED: Total (lifetime) budget cap
+  targetCpa           Money     Target cost per acquisition (SEARCH only)
   locInvoiceDetails   object    {billingContactEmail, buyerEmail, buyerName,
                                  clientName, orderNumber}
   status              string    ENABLED (default) | PAUSED
@@ -63,6 +65,7 @@ Examples:
   aads campaigns create --name "FitTrack US Search" --adam-id 900001 --daily-budget-amount 50 --countries-or-regions US
   aads campaigns create --name "FitTrack EU Search" --adam-id 900001 --daily-budget-amount "50 EUR" --countries-or-regions "GB,DE,FR"
   aads campaigns create --name "FitTrack %(COUNTRIES_OR_REGIONS) %(adChannelType)" --adam-id 900001 --daily-budget-amount 50 --countries-or-regions "DE,FR"
+  aads campaigns create --name "FitTrack Search" --adam-id 900001 --daily-budget-amount 50 --target-cpa 10 --countries-or-regions US
   aads campaigns create --name "FitTrack LOC" --adam-id 900001 --daily-budget-amount 50 --countries-or-regions US --loc-invoice-details '{"orderNumber":"PO-123"}'
   aads campaigns create --from-json campaign.json`,
 		FlagSet: fs,
@@ -136,6 +139,13 @@ Examples:
 						}
 						m["budgetAmount"] = ba
 					}
+					if *targetCpa != "" {
+						cpa, err := shared.ParseMoneyFlag(*targetCpa)
+						if err != nil {
+							return nil, err
+						}
+						m["targetCpa"] = cpa
+					}
 					if *locInvoiceDetails != "" {
 						loc, err := readJSONObjectArg(*locInvoiceDetails)
 						if err != nil {
@@ -188,12 +198,12 @@ Examples:
 					}
 				}
 
-				if err := shared.CheckBudgetLimitJSON(body); err != nil {
+				if err := ValidatePayload(ctx, client, body, ""); err != nil {
 					return nil, err
 				}
 				if *check {
 					return shared.NewMutationCheckSummary("create", "campaign", "", body, shared.MutationCheckOptions{
-						Safety: []string{"budget limits ok"},
+						Safety: []string{"budget/CPA limits ok"},
 					}), nil
 				}
 

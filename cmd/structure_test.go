@@ -152,7 +152,7 @@ func TestStructureExport_NormalizedJSON_IncludesRequestedNonDefaultFields(t *tes
 		Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
 			switch req.URL.Path {
 			case "/api/v5/campaigns":
-				return jsonResponse(`{"data":[{"id":900101,"adamId":900001,"name":"FitTrack Display","adChannelType":"DISPLAY","countriesOrRegions":["US"],"billingEvent":"IMPRESSIONS","dailyBudgetAmount":{"amount":"5","currency":"USD"},"supplySources":["APPSTORE_SEARCH_TAB"],"biddingStrategy":"AUTO"}],"pagination":{"totalResults":1,"startIndex":0,"itemsPerPage":1000}}`), nil
+				return jsonResponse(`{"data":[{"id":900101,"adamId":900001,"name":"FitTrack Display","adChannelType":"DISPLAY","countriesOrRegions":["US"],"billingEvent":"IMPRESSIONS","dailyBudgetAmount":{"amount":"5","currency":"USD"},"targetCpa":{"amount":"7.50","currency":"USD"},"supplySources":["APPSTORE_SEARCH_TAB"],"biddingStrategy":"AUTO"}],"pagination":{"totalResults":1,"startIndex":0,"itemsPerPage":1000}}`), nil
 			case "/api/v5/campaigns/900101/negativekeywords":
 				return jsonResponse(`{"data":[],"pagination":{"totalResults":0,"startIndex":0,"itemsPerPage":1000}}`), nil
 			case "/api/v5/campaigns/900101/adgroups":
@@ -177,6 +177,7 @@ func TestStructureExport_NormalizedJSON_IncludesRequestedNonDefaultFields(t *tes
 	for _, want := range []string{
 		`"adChannelType":"DISPLAY"`,
 		`"billingEvent":"IMPRESSIONS"`,
+		`"targetCpa":{"amount":"7.50","currency":"USD"}`,
 		`"supplySources":["APPSTORE_SEARCH_TAB"]`,
 		`"biddingStrategy":"AUTO"`,
 		`"pricingModel":"CPM"`,
@@ -447,7 +448,7 @@ func TestStructureExport_NoBudgets_OmitsBudgetBidAndInvoiceFields(t *testing.T) 
 		Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
 			switch req.URL.Path {
 			case "/api/v5/campaigns":
-				return jsonResponse(`{"data":[{"id":900101,"adamId":900001,"name":"FitTrack US Search","countriesOrRegions":["US"],"dailyBudgetAmount":{"amount":"5","currency":"USD"},"budgetAmount":{"amount":"100","currency":"USD"},"locInvoiceDetails":{"orderNumber":"PO-123"},"budgetOrders":[11,12]}],"pagination":{"totalResults":1,"startIndex":0,"itemsPerPage":1000}}`), nil
+				return jsonResponse(`{"data":[{"id":900101,"adamId":900001,"name":"FitTrack US Search","countriesOrRegions":["US"],"dailyBudgetAmount":{"amount":"5","currency":"USD"},"budgetAmount":{"amount":"100","currency":"USD"},"targetCpa":{"amount":"7.50","currency":"USD"},"locInvoiceDetails":{"orderNumber":"PO-123"},"budgetOrders":[11,12]}],"pagination":{"totalResults":1,"startIndex":0,"itemsPerPage":1000}}`), nil
 			case "/api/v5/campaigns/900101/negativekeywords":
 				return jsonResponse(`{"data":[],"pagination":{"totalResults":0,"startIndex":0,"itemsPerPage":1000}}`), nil
 			case "/api/v5/campaigns/900101/adgroups":
@@ -469,7 +470,7 @@ func TestStructureExport_NoBudgets_OmitsBudgetBidAndInvoiceFields(t *testing.T) 
 	if code != ExitSuccess {
 		t.Fatalf("exit code = %d, want %d; output=%q", code, ExitSuccess, out)
 	}
-	for _, unwanted := range []string{`"dailyBudgetAmount":`, `"budgetAmount":`, `"locInvoiceDetails":`, `"budgetOrders":`, `"defaultBidAmount":`, `"cpaGoal":`, `"bidAmount":`} {
+	for _, unwanted := range []string{`"dailyBudgetAmount":`, `"budgetAmount":`, `"targetCpa":`, `"locInvoiceDetails":`, `"budgetOrders":`, `"defaultBidAmount":`, `"cpaGoal":`, `"bidAmount":`} {
 		if strings.Contains(out, unwanted) {
 			t.Fatalf("output should omit %q when --no-budgets is set: %q", unwanted, out)
 		}
@@ -487,7 +488,7 @@ func TestStructureExport_Shareable_AppliesSharePreset(t *testing.T) {
 		Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
 			switch req.URL.Path {
 			case "/api/v5/campaigns":
-				return jsonResponse(`{"data":[{"id":900101,"adamId":900001,"name":"FitTrack SE: fitness calories - DE - Discovery","countriesOrRegions":["DE"],"dailyBudgetAmount":{"amount":"5","currency":"EUR"},"budgetAmount":{"amount":"100","currency":"EUR"},"locInvoiceDetails":{"orderNumber":"PO-123"},"budgetOrders":[11,12],"startTime":"` + start + `","endTime":"` + end + `"}],"pagination":{"totalResults":1,"startIndex":0,"itemsPerPage":1000}}`), nil
+				return jsonResponse(`{"data":[{"id":900101,"adamId":900001,"name":"FitTrack SE: fitness calories - DE - Discovery","countriesOrRegions":["DE"],"dailyBudgetAmount":{"amount":"5","currency":"EUR"},"budgetAmount":{"amount":"100","currency":"EUR"},"targetCpa":{"amount":"7.50","currency":"EUR"},"locInvoiceDetails":{"orderNumber":"PO-123"},"budgetOrders":[11,12],"startTime":"` + start + `","endTime":"` + end + `"}],"pagination":{"totalResults":1,"startIndex":0,"itemsPerPage":1000}}`), nil
 			case "/api/v5/apps/900001":
 				return jsonResponse(`{"data":{"adamId":900001,"appName":"FitTrack SE: fitness calories"}}`), nil
 			case "/api/v5/campaigns/900101/adgroups":
@@ -508,7 +509,7 @@ func TestStructureExport_Shareable_AppliesSharePreset(t *testing.T) {
 	if code != ExitSuccess {
 		t.Fatalf("exit code = %d, want %d; output=%q", code, ExitSuccess, out)
 	}
-	for _, unwanted := range []string{`"adamId":`, `"dailyBudgetAmount":`, `"budgetAmount":`, `"locInvoiceDetails":`, `"budgetOrders":`, `"defaultBidAmount":`, `"cpaGoal":`, `"startTime":`, `"endTime":`, `"campaignNegativeKeywords"`, `"adgroupNegativeKeywords"`, `"keywords":[`} {
+	for _, unwanted := range []string{`"adamId":`, `"dailyBudgetAmount":`, `"budgetAmount":`, `"targetCpa":`, `"locInvoiceDetails":`, `"budgetOrders":`, `"defaultBidAmount":`, `"cpaGoal":`, `"startTime":`, `"endTime":`, `"campaignNegativeKeywords"`, `"adgroupNegativeKeywords"`, `"keywords":[`} {
 		if strings.Contains(out, unwanted) {
 			t.Fatalf("shareable output unexpectedly contains %q: %q", unwanted, out)
 		}
@@ -531,7 +532,7 @@ func TestStructureExport_Shareable_ExplicitFieldsReincludeOmittedContent(t *test
 		Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
 			switch req.URL.Path {
 			case "/api/v5/campaigns":
-				return jsonResponse(`{"data":[{"id":900101,"adamId":900001,"name":"FitTrack SE: fitness calories - DE - Discovery","countriesOrRegions":["DE"],"dailyBudgetAmount":{"amount":"5","currency":"EUR"},"budgetAmount":{"amount":"100","currency":"EUR"},"locInvoiceDetails":{"orderNumber":"PO-123"},"budgetOrders":[11,12],"startTime":"` + start + `","endTime":"` + end + `"}],"pagination":{"totalResults":1,"startIndex":0,"itemsPerPage":1000}}`), nil
+				return jsonResponse(`{"data":[{"id":900101,"adamId":900001,"name":"FitTrack SE: fitness calories - DE - Discovery","countriesOrRegions":["DE"],"dailyBudgetAmount":{"amount":"5","currency":"EUR"},"budgetAmount":{"amount":"100","currency":"EUR"},"targetCpa":{"amount":"7.50","currency":"EUR"},"locInvoiceDetails":{"orderNumber":"PO-123"},"budgetOrders":[11,12],"startTime":"` + start + `","endTime":"` + end + `"}],"pagination":{"totalResults":1,"startIndex":0,"itemsPerPage":1000}}`), nil
 			case "/api/v5/apps/900001":
 				return jsonResponse(`{"data":{"adamId":900001,"appName":"FitTrack SE: fitness calories"}}`), nil
 			case "/api/v5/campaigns/900101/negativekeywords":
@@ -553,7 +554,7 @@ func TestStructureExport_Shareable_ExplicitFieldsReincludeOmittedContent(t *test
 
 	out, code := captureRun(t, []string{
 		"structure", "export", "--scope", "campaigns", "--shareable",
-		"--campaigns-fields", "adamId,dailyBudgetAmount,budgetAmount,locInvoiceDetails,budgetOrders,startTime,endTime",
+		"--campaigns-fields", "adamId,dailyBudgetAmount,budgetAmount,targetCpa,locInvoiceDetails,budgetOrders,startTime,endTime",
 		"--adgroups-fields", "defaultBidAmount,cpaGoal,startTime,endTime",
 		"--keywords-fields", "text,matchType,bidAmount",
 		"--campaigns-negatives-fields", "text,matchType",
@@ -566,6 +567,7 @@ func TestStructureExport_Shareable_ExplicitFieldsReincludeOmittedContent(t *test
 		`"adamId":900001`,
 		`"dailyBudgetAmount":{"amount":"5","currency":"EUR"}`,
 		`"budgetAmount":{"amount":"100","currency":"EUR"}`,
+		`"targetCpa":{"amount":"7.50","currency":"EUR"}`,
 		`"locInvoiceDetails":{"orderNumber":"PO-123"}`,
 		`"budgetOrders":[11,12]`,
 		`"defaultBidAmount":{"amount":"1.00","currency":"EUR"}`,
@@ -1697,5 +1699,64 @@ func TestStructureImport_FailsWhenResolvedEndTimePrecedesStartTime(t *testing.T)
 	}
 	if !strings.Contains(out, "campaign endTime must not be earlier than startTime") {
 		t.Fatalf("expected schedule ordering error, got %q", out)
+	}
+}
+
+func TestStructureImport_TargetCPARejectsDisplayCampaign(t *testing.T) {
+	client := apiPkg.NewClient(func(context.Context) (string, error) {
+		return "test-token", nil
+	}, "123", false)
+	client.SetHTTPClientForTesting(&http.Client{
+		Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
+			if req.URL.Path == "/api/v5/campaigns" && req.Method == http.MethodGet {
+				return jsonResponse(`{"data":[],"pagination":{"totalResults":0,"startIndex":0,"itemsPerPage":1000}}`), nil
+			}
+			t.Fatalf("unexpected request %s %s", req.Method, req.URL.Path)
+			return nil, nil
+		}),
+	})
+	restore := shared.SetClientForTesting(client, &config.Profile{
+		OrgID:           "123",
+		DefaultCurrency: "USD",
+	})
+	defer restore()
+
+	structureJSON := `{"schemaVersion":1,"type":"structure","scope":"campaigns","creationTime":"2026-03-31T00:00:00Z","campaigns":[{"campaign":{"adamId":900001,"name":"Imported Campaign","adChannelType":"DISPLAY","dailyBudgetAmount":{"amount":"10","currency":"USD"},"targetCpa":{"amount":"5","currency":"USD"},"countriesOrRegions":["US"]}}]}`
+	out, code := captureRun(t, []string{"structure", "import", "--from-structure", structureJSON, "--check"}, "")
+	if code != ExitUsage {
+		t.Fatalf("exit code = %d, want %d; output=%q", code, ExitUsage, out)
+	}
+	if !strings.Contains(out, "targetCpa is supported only for SEARCH campaigns") {
+		t.Fatalf("expected targetCpa validation error, got %q", out)
+	}
+}
+
+func TestStructureImport_TargetCPASafetyLimit(t *testing.T) {
+	client := apiPkg.NewClient(func(context.Context) (string, error) {
+		return "test-token", nil
+	}, "123", false)
+	client.SetHTTPClientForTesting(&http.Client{
+		Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
+			if req.URL.Path == "/api/v5/campaigns" && req.Method == http.MethodGet {
+				return jsonResponse(`{"data":[],"pagination":{"totalResults":0,"startIndex":0,"itemsPerPage":1000}}`), nil
+			}
+			t.Fatalf("unexpected request %s %s", req.Method, req.URL.Path)
+			return nil, nil
+		}),
+	})
+	restore := shared.SetClientForTesting(client, &config.Profile{
+		OrgID:           "123",
+		DefaultCurrency: "USD",
+		MaxCPAGoal:      config.DecimalText("4"),
+	})
+	defer restore()
+
+	structureJSON := `{"schemaVersion":1,"type":"structure","scope":"campaigns","creationTime":"2026-03-31T00:00:00Z","campaigns":[{"campaign":{"adamId":900001,"name":"Imported Campaign","dailyBudgetAmount":{"amount":"10","currency":"USD"},"targetCpa":{"amount":"5","currency":"USD"},"countriesOrRegions":["US"]}}]}`
+	out, code := captureRun(t, []string{"structure", "import", "--from-structure", structureJSON, "--check"}, "")
+	if code != ExitSafetyLimit {
+		t.Fatalf("exit code = %d, want %d; output=%q", code, ExitSafetyLimit, out)
+	}
+	if !strings.Contains(out, "exceeds limit") {
+		t.Fatalf("expected safety limit error, got %q", out)
 	}
 }

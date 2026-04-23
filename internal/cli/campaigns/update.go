@@ -24,6 +24,7 @@ func updateCmd() *ffcli.Command {
 	name := fs.String("name", "", "Campaign name")
 	budgetAmount := fs.String("budget-amount", "", "DEPRECATED: Total budget (AMOUNT or \"AMOUNT CURRENCY\"; bare amount uses default currency)")
 	dailyBudgetAmount := fs.String("daily-budget-amount", "", "Daily budget (AMOUNT or \"AMOUNT CURRENCY\"; bare amount uses default currency)")
+	targetCpa := fs.String("target-cpa", "", "Target CPA (AMOUNT or \"AMOUNT CURRENCY\"; bare amount uses default currency); SEARCH only")
 	locInvoiceDetails := fs.String("loc-invoice-details", "", `LOC invoice details JSON: inline JSON, @file.json, or @- for stdin`)
 	countriesOrRegions := fs.String("countries-or-regions", "", "Comma-separated country codes (e.g. US,GB)")
 	output := shared.BindOutputFlags(fs)
@@ -43,6 +44,7 @@ JSON keys (all optional):
   status              string    ENABLED | PAUSED
   budgetAmount        Money     DEPRECATED: Total (lifetime) budget cap
   dailyBudgetAmount   Money     Daily budget cap
+  targetCpa           Money     Target cost per acquisition (SEARCH only)
   countriesOrRegions  [string]  ISO alpha-2 country codes
   budgetOrders        [integer] Budget order IDs (LOC only)
   locInvoiceDetails   object    {billingContactEmail, buyerEmail, buyerName,
@@ -56,6 +58,7 @@ Examples:
   aads campaigns update --campaign-id 123 --status 0
   aads campaigns update --campaign-id 123 --daily-budget-amount 75.00
   aads campaigns update --campaign-id 123 --daily-budget-amount "75.00 EUR"
+  aads campaigns update --campaign-id 123 --target-cpa 12.50
   aads campaigns update --campaign-id 123 --name "New Name" --status ENABLED
   aads campaigns update --campaign-id 123 --loc-invoice-details '{"orderNumber":"PO-123"}'
   aads campaigns update --campaign-id 123 --countries-or-regions "US,GB,CA"
@@ -84,7 +87,7 @@ Examples:
 				ctx, cancel := shared.ContextWithTimeout(ctx)
 				defer cancel()
 
-				hasShortcuts := *status != "" || *name != "" || *budgetAmount != "" || *dailyBudgetAmount != "" || *locInvoiceDetails != "" || *countriesOrRegions != ""
+				hasShortcuts := *status != "" || *name != "" || *budgetAmount != "" || *dailyBudgetAmount != "" || *targetCpa != "" || *locInvoiceDetails != "" || *countriesOrRegions != ""
 
 				var body json.RawMessage
 				if *dataFile != "" {
@@ -94,7 +97,7 @@ Examples:
 					}
 				} else if hasShortcuts {
 					update := make(map[string]any)
-					if err := applyCampaignShortcuts(update, *status, *name, *budgetAmount, *dailyBudgetAmount, *locInvoiceDetails, *countriesOrRegions); err != nil {
+					if err := applyCampaignShortcuts(update, *status, *name, *budgetAmount, *dailyBudgetAmount, *targetCpa, *locInvoiceDetails, *countriesOrRegions); err != nil {
 						return nil, err
 					}
 					body, err = json.Marshal(update)
@@ -102,15 +105,15 @@ Examples:
 						return nil, fmt.Errorf("update: marshalling body: %w", err)
 					}
 				} else {
-					return nil, shared.UsageError("--from-json or shortcut flags (--status, --name, --budget-amount, --daily-budget-amount, --loc-invoice-details, --countries-or-regions) required")
+					return nil, shared.UsageError("--from-json or shortcut flags (--status, --name, --budget-amount, --daily-budget-amount, --target-cpa, --loc-invoice-details, --countries-or-regions) required")
 				}
 
-				if err := shared.CheckBudgetLimitJSON(body); err != nil {
+				if err := ValidatePayload(ctx, client, body, cid); err != nil {
 					return nil, err
 				}
 				if *check {
 					return shared.NewMutationCheckSummary("update", "campaign", shared.FormatTarget("campaign-id", cid), body, shared.MutationCheckOptions{
-						Safety: []string{"budget limits ok"},
+						Safety: []string{"budget/CPA limits ok"},
 					}), nil
 				}
 
@@ -135,50 +138,4 @@ Examples:
 			return shared.PrintOutput(resp, *output.Output, *output.Fields, *output.Pretty, "CAMPAIGNID")
 		},
 	}
-}
-
-func applyCampaignShortcuts(m map[string]any, status, name, budgetAmt, dailyBudgetAmt, locInvoiceDetails, countries string) error {
-	if status != "" {
-		s, err := shared.NormalizeStatus(status, "ENABLED")
-		if err != nil {
-			return err
-		}
-		m["status"] = s
-	}
-	if name != "" {
-		m["name"] = name
-	}
-	if budgetAmt != "" {
-		money, err := shared.ParseMoneyFlag(budgetAmt)
-		if err != nil {
-			return err
-		}
-		m["budgetAmount"] = money
-	}
-	if dailyBudgetAmt != "" {
-		money, err := shared.ParseMoneyFlag(dailyBudgetAmt)
-		if err != nil {
-			return err
-		}
-		m["dailyBudgetAmount"] = money
-	}
-	if locInvoiceDetails != "" {
-		loc, err := readJSONObjectArg(locInvoiceDetails)
-		if err != nil {
-			return fmt.Errorf("--loc-invoice-details: %w", err)
-		}
-		m["locInvoiceDetails"] = loc
-	}
-	if countries != "" {
-		parts := strings.Split(countries, ",")
-		codes := make([]string, 0, len(parts))
-		for _, p := range parts {
-			c := strings.TrimSpace(p)
-			if c != "" {
-				codes = append(codes, strings.ToUpper(c))
-			}
-		}
-		m["countriesOrRegions"] = codes
-	}
-	return nil
 }

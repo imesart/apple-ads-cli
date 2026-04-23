@@ -83,7 +83,7 @@ Filter operators:
 Searchable and filterable fields:
   id, orgId, name, adamId, status, servingStatus, displayStatus,
   adChannelType, supplySources, billingEvent, paymentModel,
-  countriesOrRegions, budgetAmount, dailyBudgetAmount
+  countriesOrRegions, budgetAmount, dailyBudgetAmount, targetCpa
 
 Selector JSON keys: conditions, fields, orderBy, pagination.
 
@@ -145,6 +145,7 @@ JSON keys (for --from-json):
   billingEvent        string    TAPS (default) | IMPRESSIONS
   dailyBudgetAmount   Money     (required) Daily budget cap
   budgetAmount        Money     DEPRECATED: Total (lifetime) budget cap
+  targetCpa           Money     Target cost per acquisition (SEARCH only)
   locInvoiceDetails   object    {billingContactEmail, buyerEmail, buyerName,
                                  clientName, orderNumber}
   status              string    ENABLED (default) | PAUSED
@@ -157,6 +158,7 @@ Examples:
   aads campaigns create --name "FitTrack US Search" --adam-id 900001 --daily-budget-amount 50 --countries-or-regions US
   aads campaigns create --name "FitTrack EU Search" --adam-id 900001 --daily-budget-amount "50 EUR" --countries-or-regions "GB,DE,FR"
   aads campaigns create --name "FitTrack %(COUNTRIES_OR_REGIONS) %(adChannelType)" --adam-id 900001 --daily-budget-amount 50 --countries-or-regions "DE,FR"
+  aads campaigns create --name "FitTrack Search" --adam-id 900001 --daily-budget-amount 50 --target-cpa 10 --countries-or-regions US
   aads campaigns create --name "FitTrack LOC" --adam-id 900001 --daily-budget-amount 50 --countries-or-regions US --loc-invoice-details '{"orderNumber":"PO-123"}'
   aads campaigns create --from-json campaign.json
 ```
@@ -182,6 +184,7 @@ FLAGS
   -start-time string                       Start time (UTC; accepts ISO 8601/RFC3339 datetime, YYYY-MM-DD, now, or signed offset like +5d)
   -status string                           ENABLED (default) | PAUSED (also 1/0, enable/pause)
   -supply-sources APPSTORE_SEARCH_RESULTS  APPSTORE_SEARCH_RESULTS (default) | APPSTORE_SEARCH_TAB | APPSTORE_PRODUCT_PAGES_BROWSE | APPSTORE_TODAY_TAB
+  -target-cpa string                       Target CPA (AMOUNT or "AMOUNT CURRENCY"; bare amount uses default currency); SEARCH only
 ```
 
 ### campaigns update
@@ -203,6 +206,7 @@ JSON keys (all optional):
   status              string    ENABLED | PAUSED
   budgetAmount        Money     DEPRECATED: Total (lifetime) budget cap
   dailyBudgetAmount   Money     Daily budget cap
+  targetCpa           Money     Target cost per acquisition (SEARCH only)
   countriesOrRegions  [string]  ISO alpha-2 country codes
   budgetOrders        [integer] Budget order IDs (LOC only)
   locInvoiceDetails   object    {billingContactEmail, buyerEmail, buyerName,
@@ -216,6 +220,7 @@ Examples:
   aads campaigns update --campaign-id 123 --status 0
   aads campaigns update --campaign-id 123 --daily-budget-amount 75.00
   aads campaigns update --campaign-id 123 --daily-budget-amount "75.00 EUR"
+  aads campaigns update --campaign-id 123 --target-cpa 12.50
   aads campaigns update --campaign-id 123 --name "New Name" --status ENABLED
   aads campaigns update --campaign-id 123 --loc-invoice-details '{"orderNumber":"PO-123"}'
   aads campaigns update --campaign-id 123 --countries-or-regions "US,GB,CA"
@@ -238,6 +243,7 @@ FLAGS
   -name string                  Campaign name
   -pretty=false                 Pretty-print JSON even when stdout is not a TTY
   -status string                ENABLED | PAUSED (also 1/0, enable/pause)
+  -target-cpa string            Target CPA (AMOUNT or "AMOUNT CURRENCY"; bare amount uses default currency); SEARCH only
 ```
 
 ### campaigns delete
@@ -2334,6 +2340,7 @@ FLAGS
   -output-mapping string               Write mapping JSON to this path; use - for stdout
   -pretty=false                        Pretty-print JSON even when stdout is not a TTY
   -supply-sources string               Override campaign supplySources
+  -target-cpa string                   Override campaign targetCpa
 ```
 
 ---

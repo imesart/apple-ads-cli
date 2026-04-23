@@ -81,7 +81,7 @@ func TestCampaign_JSON_Minimal(t *testing.T) {
 	// Omitempty fields should not appear
 	omittedFields := []string{"id", "orgId", "status", "displayStatus", "servingStatus",
 		"servingStateReasons", "deleted", "creationTime", "modificationTime",
-		"startTime", "endTime", "budgetAmount", "budgetOrders", "paymentModel",
+		"startTime", "endTime", "budgetAmount", "targetCpa", "budgetOrders", "paymentModel",
 		"locInvoiceDetails", "supplySources", "countryOrRegionServingStateReasons"}
 	for _, f := range omittedFields {
 		if _, ok := m[f]; ok {
@@ -121,6 +121,7 @@ func TestCampaign_JSON_AllFields(t *testing.T) {
 	startTime := "2024-01-01T00:00:00.000"
 	endTime := "2024-12-31T23:59:59.000"
 	budgetAmount := Money{Amount: "1000", Currency: "USD"}
+	targetCpa := Money{Amount: "50", Currency: "USD"}
 
 	c := Campaign{
 		ID:            &id,
@@ -146,6 +147,7 @@ func TestCampaign_JSON_AllFields(t *testing.T) {
 		BillingEvent:      CampaignBillingEventTypeImpressions,
 		BudgetAmount:      &budgetAmount,
 		DailyBudgetAmount: Money{Amount: "100", Currency: "USD"},
+		TargetCpa:         &targetCpa,
 		BudgetOrders:      []int64{246, 135},
 		PaymentModel:      &paymentModel,
 		Deleted:           &deleted,

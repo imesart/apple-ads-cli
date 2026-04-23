@@ -244,7 +244,7 @@ func buildCampaignNode(ctx context.Context, client *api.Client, campaign map[str
 	if shouldStripCampaignFieldForExport("adamId", campaignSelection, noAdamID) {
 		delete(node.Campaign, "adamId")
 	}
-	for _, key := range []string{"dailyBudgetAmount", "budgetAmount", "locInvoiceDetails", "budgetOrders", "targetCPA"} {
+	for _, key := range []string{"dailyBudgetAmount", "budgetAmount", "locInvoiceDetails", "budgetOrders", "targetCpa"} {
 		if shouldStripCampaignFieldForExport(key, campaignSelection, noBudgets) {
 			delete(node.Campaign, key)
 		}
