@@ -35,7 +35,7 @@ func TestIsStdinJSONInputArg(t *testing.T) {
 	if !IsStdinJSONInputArg("@-") {
 		t.Fatal("expected @- to be stdin")
 	}
-	if IsStdinJSONInputArg("-") {
-		t.Fatal("did not expect - to be stdin")
+	if !IsStdinJSONInputArg("-") {
+		t.Fatal("expected - to be accepted as stdin")
 	}
 }

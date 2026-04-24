@@ -4,9 +4,12 @@ import "os"
 
 // ReadJSONInputArg reads a JSON-bearing argument.
 // - "@file.json" reads from file
-// - "@-" reads from stdin
+// - "@-" or "-" reads from stdin
 // - anything else is treated as inline JSON text
 func ReadJSONInputArg(arg string) ([]byte, error) {
+	if arg == "-" {
+		return os.ReadFile("/dev/stdin")
+	}
 	if len(arg) > 0 && arg[0] == '@' {
 		path := arg[1:]
 		if path == "-" {
@@ -17,7 +20,8 @@ func ReadJSONInputArg(arg string) ([]byte, error) {
 	return []byte(arg), nil
 }
 
-// IsStdinJSONInputArg reports whether the argument uses @- stdin notation.
+// IsStdinJSONInputArg reports whether the argument reads JSON from stdin.
+// Both the documented "@-" form and the accepted "-" alias are supported.
 func IsStdinJSONInputArg(arg string) bool {
-	return arg == "@-"
+	return arg == "@-" || arg == "-"
 }
