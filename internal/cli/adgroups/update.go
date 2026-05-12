@@ -13,7 +13,6 @@ import (
 	"github.com/imesart/apple-ads-cli/internal/api/requests/adgroups"
 	keywordsreq "github.com/imesart/apple-ads-cli/internal/api/requests/keywords"
 	"github.com/imesart/apple-ads-cli/internal/cli/shared"
-	"github.com/imesart/apple-ads-cli/internal/config"
 	"github.com/imesart/apple-ads-cli/internal/types"
 )
 
@@ -93,6 +92,15 @@ Examples:
 				return shared.UsageError("cannot use --from-json @- with stdin-piped ID flags")
 			}
 
+			if *dataFile != "" && !*merge {
+				conflicts := shared.VisitedFlagNames(fs,
+					"default-bid", "cpa-goal", "status", "name", "start-time", "end-time",
+				)
+				if len(conflicts) > 0 {
+					return shared.UsageErrorf("--from-json cannot be combined with --%s (shortcut flags are ignored under --from-json; use --merge to overlay shortcuts on top of JSON)", conflicts[0])
+				}
+			}
+
 			execOnce := func() (any, error) {
 				cid := strings.TrimSpace(*campaignID)
 				if cid == "" {
@@ -137,13 +145,6 @@ Examples:
 				needsFetch := (bidExpr != nil && bidExpr.IsRelative()) || (cpaExpr != nil && cpaExpr.IsRelative())
 				readOnlyChecks := []string{}
 				warnings := []string{}
-
-				if cpaExpr != nil {
-					readOnlyChecks = append(readOnlyChecks, "fetched campaign to verify SEARCH channel")
-					if err := checkSearchCampaign(ctx, client, cid); err != nil {
-						return nil, err
-					}
-				}
 
 				// Fetch current ad group if needed for --merge or relative expressions
 				var currentMap map[string]any
@@ -203,7 +204,14 @@ Examples:
 						}
 					}
 
-					if err = applyShortcuts(currentMap, resolvedBid, resolvedCPA, *status, *name, *startTime, *endTime, cfg); err != nil {
+					if err = ApplyFields(currentMap, Fields{
+						DefaultBidAmount: resolvedBid,
+						CPAGoal:          resolvedCPA,
+						Status:           *status,
+						Name:             *name,
+						StartTime:        *startTime,
+						EndTime:          *endTime,
+					}, cfg, FieldLabels{}); err != nil {
 						return nil, err
 					}
 
@@ -219,7 +227,14 @@ Examples:
 					}
 				} else if hasShortcuts {
 					update := make(map[string]any)
-					if err = applyShortcuts(update, resolvedBid, resolvedCPA, *status, *name, *startTime, *endTime, cfg); err != nil {
+					if err = ApplyFields(update, Fields{
+						DefaultBidAmount: resolvedBid,
+						CPAGoal:          resolvedCPA,
+						Status:           *status,
+						Name:             *name,
+						StartTime:        *startTime,
+						EndTime:          *endTime,
+					}, cfg, FieldLabels{}); err != nil {
 						return nil, err
 					}
 					body, err = json.Marshal(update)
@@ -230,7 +245,24 @@ Examples:
 					return nil, shared.UsageError("--from-json, --default-bid, --status, or --merge is required")
 				}
 
-				if err = shared.CheckBidLimitJSON(body); err != nil {
+				hasCPAGoal, err := PayloadHasCPAGoal(body)
+				if err != nil {
+					return nil, err
+				}
+				var cpaCampaignAdChannelType string
+				if hasCPAGoal {
+					readOnlyChecks = append(readOnlyChecks, "fetched campaign to verify SEARCH channel")
+					cpaCampaignAdChannelType, err = resolveCampaignAdChannelType(ctx, client, cid)
+					if err != nil {
+						return nil, err
+					}
+				}
+
+				cpaGoalLabel := "--cpa-goal"
+				if *cpaGoal == "" {
+					cpaGoalLabel = "cpaGoal"
+				}
+				if err = ValidatePayload(ctx, client, cid, cpaCampaignAdChannelType, body, cpaGoalLabel, hasCPAGoal); err != nil {
 					return nil, err
 				}
 
@@ -294,40 +326,6 @@ Examples:
 			return shared.PrintOutput(resp, *output.Output, *output.Fields, *output.Pretty, "ADGROUPID")
 		},
 	}
-}
-
-func applyShortcuts(m map[string]any, bid, cpaGoal map[string]string, status, name, startTime, endTime string, cfg *config.Profile) error {
-	if bid != nil {
-		m["defaultBidAmount"] = bid
-	}
-	if cpaGoal != nil {
-		m["cpaGoal"] = cpaGoal
-	}
-	if status != "" {
-		s, err := shared.NormalizeStatus(status, "ENABLED")
-		if err != nil {
-			return err
-		}
-		m["status"] = s
-	}
-	if name != "" {
-		m["name"] = name
-	}
-	if startTime != "" {
-		st, err := shared.ResolveDateTimeFlag(startTime, cfg)
-		if err != nil {
-			return fmt.Errorf("--start-time: %w", err)
-		}
-		m["startTime"] = st
-	}
-	if endTime != "" {
-		et, err := shared.ResolveDateTimeFlag(endTime, cfg)
-		if err != nil {
-			return fmt.Errorf("--end-time: %w", err)
-		}
-		m["endTime"] = et
-	}
-	return nil
 }
 
 func buildInheritedKeywordBidUpdates(ctx context.Context, client interface {

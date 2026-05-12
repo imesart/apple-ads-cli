@@ -11,8 +11,6 @@ import (
 
 	"github.com/imesart/apple-ads-cli/internal/api/requests/adgroups"
 	"github.com/imesart/apple-ads-cli/internal/cli/shared"
-	"github.com/imesart/apple-ads-cli/internal/config"
-	"github.com/imesart/apple-ads-cli/internal/output"
 )
 
 func createCmd() *ffcli.Command {
@@ -71,6 +69,17 @@ Examples:
 				return shared.UsageError("cannot use --from-json @- with stdin-piped ID flags")
 			}
 
+			if *dataFile != "" {
+				conflicts := shared.VisitedFlagNames(fs,
+					"name", "default-bid", "status", "start-time", "end-time",
+					"automated-keywords-opt-in", "cpa-goal",
+					"age", "gender", "device-class", "country-code", "admin-area", "locality",
+				)
+				if len(conflicts) > 0 {
+					return shared.UsageErrorf("--from-json cannot be combined with --%s (shortcut flags are ignored under --from-json)", conflicts[0])
+				}
+			}
+
 			execOnce := func() (any, error) {
 				cid := strings.TrimSpace(*campaignID)
 				if cid == "" {
@@ -90,12 +99,6 @@ Examples:
 				defer cancel()
 
 				readOnlyChecks := []string{}
-				if *cpaGoal != "" {
-					readOnlyChecks = append(readOnlyChecks, "fetched campaign to verify SEARCH channel")
-					if err := checkSearchCampaign(ctx, client, cid); err != nil {
-						return nil, err
-					}
-				}
 
 				var body json.RawMessage
 				if *dataFile != "" {
@@ -121,36 +124,22 @@ Examples:
 						"defaultBidAmount": bid,
 					}
 
-					if *statusFlag != "" {
-						s, err := shared.NormalizeStatus(*statusFlag, "ENABLED")
-						if err != nil {
-							return nil, err
-						}
-						m["status"] = s
-					}
-					if *startTime != "" {
-						st, err := shared.ResolveDateTimeFlag(*startTime, cfg)
-						if err != nil {
-							return nil, fmt.Errorf("--start-time: %w", err)
-						}
-						m["startTime"] = st
-					}
-					if *endTime != "" {
-						et, err := shared.ResolveDateTimeFlag(*endTime, cfg)
-						if err != nil {
-							return nil, fmt.Errorf("--end-time: %w", err)
-						}
-						m["endTime"] = et
-					}
-					if *autoKeywords {
-						m["automatedKeywordsOptIn"] = true
+					fields := Fields{
+						DefaultBidAmount:       bid,
+						Status:                 *statusFlag,
+						StartTime:              *startTime,
+						EndTime:                *endTime,
+						AutomatedKeywordsOptIn: *autoKeywords,
 					}
 					if *cpaGoal != "" {
 						money, err := shared.ParseMoneyFlag(*cpaGoal)
 						if err != nil {
 							return nil, err
 						}
-						m["cpaGoal"] = money
+						fields.CPAGoal = money
+					}
+					if err := ApplyFields(m, fields, cfg, FieldLabels{}); err != nil {
+						return nil, err
 					}
 
 					td, err := buildTargetingDimensions(*age, *gender, *deviceClass, *countryCode, *adminArea, *locality)
@@ -172,12 +161,29 @@ Examples:
 						return nil, fmt.Errorf("create: marshalling body: %w", err)
 					}
 				}
-				body, err = ensureAdgroupCreateStartTime(body, cfg)
+				body, err = normalizeCreatePayload(body, cfg)
 				if err != nil {
 					return nil, err
 				}
 
-				if err := shared.CheckBidLimitJSON(body); err != nil {
+				hasCPAGoal, err := PayloadHasCPAGoal(body)
+				if err != nil {
+					return nil, err
+				}
+				var cpaCampaignAdChannelType string
+				if hasCPAGoal {
+					readOnlyChecks = append(readOnlyChecks, "fetched campaign to verify SEARCH channel")
+					cpaCampaignAdChannelType, err = resolveCampaignAdChannelType(ctx, client, cid)
+					if err != nil {
+						return nil, err
+					}
+				}
+
+				cpaGoalLabel := "--cpa-goal"
+				if *cpaGoal == "" {
+					cpaGoalLabel = "cpaGoal"
+				}
+				if err := ValidatePayload(ctx, client, cid, cpaCampaignAdChannelType, body, cpaGoalLabel, hasCPAGoal); err != nil {
 					return nil, err
 				}
 				if *check {
@@ -208,23 +214,4 @@ Examples:
 			return shared.PrintOutput(resp, *output.Output, *output.Fields, *output.Pretty, "ADGROUPID")
 		},
 	}
-}
-
-func ensureAdgroupCreateStartTime(body json.RawMessage, cfg *config.Profile) (json.RawMessage, error) {
-	var payload map[string]any
-	if err := output.UnmarshalUseNumber(body, &payload); err != nil {
-		return nil, fmt.Errorf("create: parsing body: %w", err)
-	}
-	if _, ok := payload["startTime"]; !ok || strings.TrimSpace(fmt.Sprintf("%v", payload["startTime"])) == "" || fmt.Sprintf("%v", payload["startTime"]) == "<nil>" {
-		startTime, err := shared.ResolveDateTimeFlag("now", cfg)
-		if err != nil {
-			return nil, fmt.Errorf("create: default --start-time now: %w", err)
-		}
-		payload["startTime"] = startTime
-	}
-	normalized, err := json.Marshal(payload)
-	if err != nil {
-		return nil, fmt.Errorf("create: marshalling body: %w", err)
-	}
-	return normalized, nil
 }

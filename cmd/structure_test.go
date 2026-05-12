@@ -1064,6 +1064,78 @@ func TestStructureImport_Check_Adgroups_EmitsMappingJSON(t *testing.T) {
 	}
 }
 
+func TestStructureImport_AdgroupCPAGoalRejectedOnNonSearchCampaign(t *testing.T) {
+	requests := 0
+	client := apiPkg.NewClient(func(context.Context) (string, error) {
+		return "test-token", nil
+	}, "123", false)
+	client.SetHTTPClientForTesting(&http.Client{
+		Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
+			requests++
+			if req.URL.Path == "/api/v5/campaigns/500" {
+				return jsonResponse(`{"data":{"id":500,"name":"Destination","adChannelType":"DISPLAY","countriesOrRegions":["US"],"billingEvent":"TAPS","dailyBudgetAmount":{"amount":"10","currency":"USD"},"adamId":900001}}`), nil
+			}
+			t.Fatalf("unexpected request path: %s", req.URL.Path)
+			return nil, nil
+		}),
+	})
+	restore := shared.SetClientForTesting(client, &config.Profile{OrgID: "123", DefaultCurrency: "USD"})
+	defer restore()
+
+	structureJSON := `{"schemaVersion":1,"type":"structure","scope":"adgroups","creationTime":"2026-03-31T00:00:00Z","adgroups":[{"adgroup":{"name":"Source Group","defaultBidAmount":{"amount":"1.20","currency":"USD"},"cpaGoal":{"amount":"2.00","currency":"USD"}}}]}`
+	out, code := captureRun(t, []string{"structure", "import", "--from-structure", structureJSON, "--campaign-id", "500", "--check"}, "")
+	if code == ExitSuccess {
+		t.Fatalf("expected failure for cpaGoal on non-SEARCH campaign; output=%q", out)
+	}
+	if !strings.Contains(out, "cpaGoal requires a SEARCH campaign") {
+		t.Fatalf("expected error to use JSON label 'cpaGoal requires a SEARCH campaign', got %q", out)
+	}
+	if strings.Contains(out, "--cpa-goal") {
+		t.Fatalf("structure import should not reference --cpa-goal flag label, got %q", out)
+	}
+	if !strings.Contains(out, "DISPLAY") {
+		t.Fatalf("expected error to mention DISPLAY adChannelType, got %q", out)
+	}
+	if requests == 0 {
+		t.Fatalf("expected campaign fetch to have happened")
+	}
+}
+
+func TestStructureImport_AdgroupStartTimeFlagUsesImportFlagName(t *testing.T) {
+	client := apiPkg.NewClient(func(context.Context) (string, error) {
+		return "test-token", nil
+	}, "123", false)
+	client.SetHTTPClientForTesting(&http.Client{
+		Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
+			if req.URL.Path == "/api/v5/campaigns/500" {
+				return jsonResponse(`{"data":{"id":500,"name":"Destination","adChannelType":"SEARCH","countriesOrRegions":["US"],"billingEvent":"TAPS","dailyBudgetAmount":{"amount":"10","currency":"USD"},"adamId":900001}}`), nil
+			}
+			t.Fatalf("unexpected request path: %s", req.URL.Path)
+			return nil, nil
+		}),
+	})
+	restore := shared.SetClientForTesting(client, &config.Profile{OrgID: "123", DefaultCurrency: "USD"})
+	defer restore()
+
+	structureJSON := `{"schemaVersion":1,"type":"structure","scope":"adgroups","creationTime":"2026-03-31T00:00:00Z","adgroups":[{"adgroup":{"name":"Source Group","defaultBidAmount":{"amount":"1.20","currency":"USD"}}}]}`
+	out, code := captureRun(t, []string{
+		"structure", "import",
+		"--from-structure", structureJSON,
+		"--campaign-id", "500",
+		"--adgroups-start-time", "not-a-time",
+		"--check",
+	}, "")
+	if code == ExitSuccess {
+		t.Fatalf("expected failure for invalid adgroups start time; output=%q", out)
+	}
+	if !strings.Contains(out, "--adgroups-start-time") {
+		t.Fatalf("expected import flag label in error, got %q", out)
+	}
+	if strings.Contains(out, "--start-time") {
+		t.Fatalf("did not expect generic --start-time label, got %q", out)
+	}
+}
+
 func TestStructureImport_Check_ReportsAllCollisions(t *testing.T) {
 	client := apiPkg.NewClient(func(context.Context) (string, error) {
 		return "test-token", nil

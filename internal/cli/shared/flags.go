@@ -47,6 +47,26 @@ func BindForceFlag(fs *flag.FlagSet) {
 	fs.BoolVar(&globalForce, "force", false, "Skip safety checks")
 }
 
+// VisitedFlagNames returns the names of flags from the candidate list that
+// were explicitly set on fs. Useful for detecting silently-ignored shortcut
+// flags when --from-json was passed (they would otherwise be a no-op).
+func VisitedFlagNames(fs *flag.FlagSet, candidates ...string) []string {
+	if len(candidates) == 0 {
+		return nil
+	}
+	want := make(map[string]struct{}, len(candidates))
+	for _, name := range candidates {
+		want[name] = struct{}{}
+	}
+	var visited []string
+	fs.Visit(func(f *flag.Flag) {
+		if _, ok := want[f.Name]; ok {
+			visited = append(visited, f.Name)
+		}
+	})
+	return visited
+}
+
 // Global flag accessors
 func Profile() string   { return config.SelectedProfile(globalProfile) }
 func ConfigDir() string { return globalConfigDir }

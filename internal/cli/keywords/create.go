@@ -58,6 +58,13 @@ Examples:
 				return shared.UsageError("cannot use --from-json @- with stdin-piped ID flags")
 			}
 
+			if *dataFile != "" {
+				conflicts := shared.VisitedFlagNames(fs, "text", "match-type", "bid", "status")
+				if len(conflicts) > 0 {
+					return shared.UsageErrorf("--from-json cannot be combined with --%s (shortcut flags are ignored under --from-json)", conflicts[0])
+				}
+			}
+
 			execOnce := func() (any, error) {
 				cid := strings.TrimSpace(*campaignID)
 				if cid == "" {
@@ -83,39 +90,33 @@ Examples:
 						return nil, fmt.Errorf("create: reading body: %w", err)
 					}
 				} else if *text != "" {
-					items := shared.ParseTextList(*text)
-					mt, err := shared.NormalizeMatchType(*matchType)
-					if err != nil {
+					fields := Fields{
+						Status:       *statusFlag,
+						MatchType:    *matchType,
+						MatchTypeSet: true,
+					}
+					if *bid != "" {
+						fields.Bid, err = shared.ParseMoneyFlag(*bid)
+						if err != nil {
+							return nil, err
+						}
+					}
+					if err := fields.Validate(); err != nil {
 						return nil, err
 					}
 
-					var bidMoney map[string]string
-					if *bid != "" {
-						bidMoney, err = shared.ParseMoneyFlag(*bid)
-						if err != nil {
-							return nil, err
-						}
-					}
-
-					var s string
-					if *statusFlag != "" {
-						s, err = shared.NormalizeStatus(*statusFlag, "ACTIVE")
-						if err != nil {
-							return nil, err
-						}
+					items := shared.ParseTextList(*text)
+					if len(items) == 0 {
+						return nil, shared.UsageError("--text produced no keywords (after trimming/empty-item removal)")
 					}
 
 					kws := make([]map[string]any, 0, len(items))
 					for _, t := range items {
 						kw := map[string]any{
-							"text":      t,
-							"matchType": mt,
+							"text": t,
 						}
-						if bidMoney != nil {
-							kw["bidAmount"] = bidMoney
-						}
-						if s != "" {
-							kw["status"] = s
+						if err := ApplyFields(kw, fields); err != nil {
+							return nil, err
 						}
 						kws = append(kws, kw)
 					}
@@ -128,7 +129,7 @@ Examples:
 					return nil, shared.UsageError("--from-json or --text is required")
 				}
 
-				if err := shared.CheckBidLimitJSON(body); err != nil {
+				if err := ValidatePayload(body); err != nil {
 					return nil, err
 				}
 				if *check {

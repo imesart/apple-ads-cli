@@ -18,7 +18,9 @@ import (
 	keywordsreq "github.com/imesart/apple-ads-cli/internal/api/requests/keywords"
 	negadgroupreq "github.com/imesart/apple-ads-cli/internal/api/requests/negatives_adgroup"
 	negcampaignreq "github.com/imesart/apple-ads-cli/internal/api/requests/negatives_campaign"
+	adgroupscli "github.com/imesart/apple-ads-cli/internal/cli/adgroups"
 	campaignscli "github.com/imesart/apple-ads-cli/internal/cli/campaigns"
+	keywordscli "github.com/imesart/apple-ads-cli/internal/cli/keywords"
 	"github.com/imesart/apple-ads-cli/internal/cli/shared"
 	"github.com/imesart/apple-ads-cli/internal/config"
 )
@@ -492,53 +494,37 @@ func resolveAdgroupPayload(ctx context.Context, client *api.Client, cfg *config.
 	if err := resolveImportedScheduleFields(payload, cfg, "adgroup"); err != nil {
 		return nil, err
 	}
+	fields := adgroupscli.Fields{
+		Status:                 flags.adgroupsStatus,
+		StartTime:              flags.adgroupsStartTime,
+		EndTime:                flags.adgroupsEndTime,
+		AutomatedKeywordsOptIn: flags.automatedKeywordsOptIn,
+	}
 	if flags.defaultBid != "" {
 		money, err := shared.ParseMoneyFlag(flags.defaultBid)
 		if err != nil {
 			return nil, err
 		}
-		payload["defaultBidAmount"] = money
+		fields.DefaultBidAmount = money
 	}
 	if flags.cpaGoal != "" {
 		money, err := shared.ParseMoneyFlag(flags.cpaGoal)
 		if err != nil {
 			return nil, err
 		}
-		payload["cpaGoal"] = money
+		fields.CPAGoal = money
 	}
-	if flags.adgroupsStatus != "" {
-		status, err := shared.NormalizeStatus(flags.adgroupsStatus, "ENABLED")
-		if err != nil {
-			return nil, err
-		}
-		payload["status"] = status
+	if err := adgroupscli.ApplyFields(payload, fields, cfg, adgroupscli.FieldLabels{
+		StartTime: "--adgroups-start-time",
+		EndTime:   "--adgroups-end-time",
+	}); err != nil {
+		return nil, err
 	}
-	if flags.adgroupsStartTime != "" {
-		value, err := shared.ResolveDateTimeFlag(flags.adgroupsStartTime, cfg)
-		if err != nil {
-			return nil, err
-		}
-		payload["startTime"] = value
-	}
-	if flags.adgroupsEndTime != "" {
-		value, err := shared.ResolveDateTimeFlag(flags.adgroupsEndTime, cfg)
-		if err != nil {
-			return nil, err
-		}
-		payload["endTime"] = value
-	}
-	if isEmptyValue(payload["startTime"]) {
-		value, err := shared.ResolveDateTimeFlag("now", cfg)
-		if err != nil {
-			return nil, err
-		}
-		payload["startTime"] = value
+	if err := adgroupscli.EnsureCreateStartTime(payload, cfg); err != nil {
+		return nil, err
 	}
 	if err := validateScheduleOrdering(payload, "adgroup"); err != nil {
 		return nil, err
-	}
-	if flags.automatedKeywordsOptIn {
-		payload["automatedKeywordsOptIn"] = true
 	}
 	payload = applyAdgroupCreateDefaults(payload)
 
@@ -576,7 +562,12 @@ func resolveAdgroupPayload(ctx context.Context, client *api.Client, cfg *config.
 	if err := ensureRequiredFieldsWithFlags("adgroup", payload, adgroupRequiredFields, adgroupRequiredFieldFlags); err != nil {
 		return nil, err
 	}
-	if err := shared.CheckBidLimitJSON(mustMarshalRaw(payload)); err != nil {
+	body := mustMarshalRaw(payload)
+	hasCPAGoal, err := adgroupscli.PayloadHasCPAGoal(body)
+	if err != nil {
+		return nil, err
+	}
+	if err := adgroupscli.ValidatePayload(ctx, client, stringValue(campaign["id"]), stringValue(campaign["adChannelType"]), body, "cpaGoal", hasCPAGoal); err != nil {
 		return nil, err
 	}
 	return payload, nil
@@ -689,19 +680,9 @@ func scheduleStringValue(payload map[string]any, key string) (string, bool) {
 
 func resolveKeywordPayload(source map[string]any, flags *importFlags, defaultBid any, bidWasSet bool) (map[string]any, error) {
 	payload := normalizeKeywordForImport(source)
-	if flags.matchType != "" {
-		value, err := shared.NormalizeMatchType(flags.matchType)
-		if err != nil {
-			return nil, err
-		}
-		payload["matchType"] = value
-	}
-	if flags.keywordsStatus != "" {
-		value, err := shared.NormalizeStatus(flags.keywordsStatus, "ACTIVE")
-		if err != nil {
-			return nil, err
-		}
-		payload["status"] = value
+	fields := keywordscli.Fields{
+		Status:    flags.keywordsStatus,
+		MatchType: flags.matchType,
 	}
 	if bidWasSet {
 		if flags.bid == "" {
@@ -711,8 +692,11 @@ func resolveKeywordPayload(source map[string]any, flags *importFlags, defaultBid
 			if err != nil {
 				return nil, err
 			}
-			payload["bidAmount"] = money
+			fields.Bid = money
 		}
+	}
+	if err := keywordscli.ApplyFields(payload, fields); err != nil {
+		return nil, err
 	}
 	if moneyEquals(payload["bidAmount"], defaultBid) {
 		delete(payload, "bidAmount")
@@ -720,7 +704,7 @@ func resolveKeywordPayload(source map[string]any, flags *importFlags, defaultBid
 	if err := ensureRequiredFields("keyword", payload, keywordRequiredFields); err != nil {
 		return nil, err
 	}
-	if err := shared.CheckBidLimitJSON(mustMarshalRaw([]map[string]any{payload})); err != nil {
+	if err := keywordscli.ValidatePayload(mustMarshalRaw([]map[string]any{payload})); err != nil {
 		return nil, err
 	}
 	return payload, nil

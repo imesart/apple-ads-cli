@@ -1047,6 +1047,74 @@ func TestAdGroupsCreateNameTemplate(t *testing.T) {
 	}
 }
 
+func TestAdGroupsCreateFromJSONPreservesLargeIntegers(t *testing.T) {
+	const body = `{"name":"My Ad Group","defaultBidAmount":{"amount":"1.25","currency":"USD"},"targetingDimensions":{"age":{"included":[{"minAge":9007199254740993,"maxAge":9007199254740995}]}}}`
+	client := newTestClient(recordingTransport(t, http.MethodPost, "/api/v5/campaigns/123/adgroups", func(reqBody []byte) *http.Response {
+		got := string(reqBody)
+		if !strings.Contains(got, `"minAge":9007199254740993`) {
+			t.Fatalf("request body lost minAge precision: %s", got)
+		}
+		if !strings.Contains(got, `"maxAge":9007199254740995`) {
+			t.Fatalf("request body lost maxAge precision: %s", got)
+		}
+		return jsonResponse(`{"data":{"id":456}}`)
+	}))
+	restore := shared.SetClientForTesting(client, &config.Profile{
+		OrgID:            "123",
+		DefaultCurrency:  "USD",
+		DefaultTimezone:  "UTC",
+		DefaultTimeOfDay: "09:30:00",
+	})
+	defer restore()
+	restoreNow := shared.SetNowFuncForTesting(func() time.Time {
+		return time.Date(2026, time.March, 25, 15, 4, 5, 0, time.UTC)
+	})
+	defer restoreNow()
+
+	out, code := captureRun(t, []string{
+		"adgroups", "create",
+		"--campaign-id", "123",
+		"--from-json", body,
+	}, "")
+	if code != ExitSuccess {
+		t.Fatalf("exit code = %d, want %d; output=%q", code, ExitSuccess, out)
+	}
+}
+
+func TestAdGroupsCreateFromJSONRejectsNonStringStartTime(t *testing.T) {
+	client := newTestClient(func(req *http.Request) (*http.Response, error) {
+		t.Fatalf("request should not be sent for malformed startTime")
+		return nil, nil
+	})
+	restore := shared.SetClientForTesting(client, &config.Profile{OrgID: "123", DefaultCurrency: "USD"})
+	defer restore()
+
+	tests := []struct {
+		name      string
+		startTime string
+	}{
+		{name: "number", startTime: `123`},
+		{name: "object", startTime: `{}`},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			body := `{"name":"My Ad Group","defaultBidAmount":{"amount":"1.25","currency":"USD"},"startTime":` + tt.startTime + `}`
+			out, code := captureRun(t, []string{
+				"adgroups", "create",
+				"--campaign-id", "123",
+				"--from-json", body,
+			}, "")
+			if code != ExitUsage {
+				t.Fatalf("exit code = %d, want %d; output=%q", code, ExitUsage, out)
+			}
+			if !strings.Contains(out, "startTime must be a string") {
+				t.Fatalf("expected startTime validation error, got %q", out)
+			}
+		})
+	}
+}
+
 func TestAdGroupsUpdateFlagPayload(t *testing.T) {
 	client := newTestClient(func(req *http.Request) (*http.Response, error) {
 		switch {
@@ -1114,6 +1182,219 @@ func TestAdGroupsUpdateCPAGoalRejectsNonSearchCampaign(t *testing.T) {
 	}
 	if !strings.Contains(out, "SEARCH") {
 		t.Fatalf("expected error mentioning SEARCH, got %q", out)
+	}
+	if !strings.Contains(out, "--cpa-goal") {
+		t.Fatalf("expected error to cite the --cpa-goal flag, got %q", out)
+	}
+}
+
+// TestAdGroupsUpdateCPAGoalCheckAnnouncesFetch ensures --cpa-goal with --check
+// both fetches the campaign to verify SEARCH and announces that fetch in
+// readOnlyChecks.
+func TestAdGroupsUpdateCPAGoalCheckAnnouncesFetch(t *testing.T) {
+	requests := 0
+	client := newTestClient(func(req *http.Request) (*http.Response, error) {
+		requests++
+		if req.Method == http.MethodGet && req.URL.Path == "/api/v5/campaigns/123" {
+			return jsonResponse(`{"data":{"id":123,"adChannelType":"SEARCH"}}`), nil
+		}
+		t.Fatalf("unexpected request %s %s", req.Method, req.URL.Path)
+		return nil, nil
+	})
+	restore := shared.SetClientForTesting(client, &config.Profile{OrgID: "123", DefaultCurrency: "USD"})
+	defer restore()
+
+	out, code := captureRun(t, []string{
+		"adgroups", "update",
+		"--campaign-id", "123",
+		"--adgroup-id", "456",
+		"--cpa-goal", "2.25",
+		"--check",
+		"-f", "json",
+	}, "")
+	if code != ExitSuccess {
+		t.Fatalf("exit code = %d, want %d; output=%q", code, ExitSuccess, out)
+	}
+	if requests != 1 {
+		t.Fatalf("expected exactly one campaign GET, got %d", requests)
+	}
+	got := mustUnmarshalMap(t, []byte(out))
+	checks, ok := got["readOnlyChecks"].([]any)
+	if !ok {
+		t.Fatalf("readOnlyChecks missing or wrong type: %v", got["readOnlyChecks"])
+	}
+	found := false
+	for _, c := range checks {
+		if s, _ := c.(string); s == "fetched campaign to verify SEARCH channel" {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Fatalf("expected readOnlyChecks to announce SEARCH-channel fetch; got %v", checks)
+	}
+}
+
+// TestAdGroupsCreateCPAGoalFromJSONCheckAnnouncesFetch ensures cpaGoal supplied
+// via --from-json (not the --cpa-goal flag) still triggers the campaign GET
+// and is announced in --check readOnlyChecks.
+func TestAdGroupsCreateCPAGoalFromJSONCheckAnnouncesFetch(t *testing.T) {
+	requests := 0
+	client := newTestClient(func(req *http.Request) (*http.Response, error) {
+		requests++
+		if req.Method == http.MethodGet && req.URL.Path == "/api/v5/campaigns/123" {
+			return jsonResponse(`{"data":{"id":123,"adChannelType":"SEARCH"}}`), nil
+		}
+		t.Fatalf("unexpected request %s %s", req.Method, req.URL.Path)
+		return nil, nil
+	})
+	restore := shared.SetClientForTesting(client, &config.Profile{
+		OrgID:            "123",
+		DefaultCurrency:  "USD",
+		DefaultTimezone:  "UTC",
+		DefaultTimeOfDay: "09:30:00",
+	})
+	defer restore()
+	restoreNow := shared.SetNowFuncForTesting(func() time.Time {
+		return time.Date(2026, time.March, 25, 15, 4, 5, 0, time.UTC)
+	})
+	defer restoreNow()
+
+	body := `{"name":"x","defaultBidAmount":{"amount":"1.50","currency":"USD"},"cpaGoal":{"amount":"2.00","currency":"USD"}}`
+	out, code := captureRun(t, []string{
+		"adgroups", "create",
+		"--campaign-id", "123",
+		"--from-json", body,
+		"--check",
+		"-f", "json",
+	}, "")
+	if code != ExitSuccess {
+		t.Fatalf("exit code = %d, want %d; output=%q", code, ExitSuccess, out)
+	}
+	if requests != 1 {
+		t.Fatalf("expected exactly one campaign GET, got %d", requests)
+	}
+	got := mustUnmarshalMap(t, []byte(out))
+	checks, ok := got["readOnlyChecks"].([]any)
+	if !ok {
+		t.Fatalf("readOnlyChecks missing or wrong type: %v", got["readOnlyChecks"])
+	}
+	found := false
+	for _, c := range checks {
+		if s, _ := c.(string); s == "fetched campaign to verify SEARCH channel" {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Fatalf("expected readOnlyChecks to announce SEARCH-channel fetch; got %v", checks)
+	}
+}
+
+func TestAdGroupsCreateCPAGoalFromJSONUsesJSONLabelOnNonSearchCampaign(t *testing.T) {
+	client := newTestClient(func(req *http.Request) (*http.Response, error) {
+		if req.Method == http.MethodGet && req.URL.Path == "/api/v5/campaigns/123" {
+			return jsonResponse(`{"data":{"id":123,"adChannelType":"DISPLAY"}}`), nil
+		}
+		t.Fatalf("unexpected request %s %s", req.Method, req.URL.Path)
+		return nil, nil
+	})
+	restore := shared.SetClientForTesting(client, &config.Profile{OrgID: "123", DefaultCurrency: "USD"})
+	defer restore()
+
+	body := `{"name":"x","defaultBidAmount":{"amount":"1.50","currency":"USD"},"cpaGoal":{"amount":"2.00","currency":"USD"}}`
+	out, code := captureRun(t, []string{
+		"adgroups", "create",
+		"--campaign-id", "123",
+		"--from-json", body,
+		"--check",
+	}, "")
+	if code == ExitSuccess {
+		t.Fatalf("expected failure for cpaGoal on non-SEARCH campaign; output=%q", out)
+	}
+	if !strings.Contains(out, "cpaGoal requires a SEARCH campaign") {
+		t.Fatalf("expected JSON label in error, got %q", out)
+	}
+	if strings.Contains(out, "--cpa-goal") {
+		t.Fatalf("did not expect --cpa-goal flag label, got %q", out)
+	}
+}
+
+// TestAdGroupsUpdateCPAGoalFromJSONCheckAnnouncesFetch ensures cpaGoal supplied
+// via --from-json (not the --cpa-goal flag) still triggers the campaign GET
+// and is announced in --check readOnlyChecks.
+func TestAdGroupsUpdateCPAGoalFromJSONCheckAnnouncesFetch(t *testing.T) {
+	requests := 0
+	client := newTestClient(func(req *http.Request) (*http.Response, error) {
+		requests++
+		if req.Method == http.MethodGet && req.URL.Path == "/api/v5/campaigns/123" {
+			return jsonResponse(`{"data":{"id":123,"adChannelType":"SEARCH"}}`), nil
+		}
+		t.Fatalf("unexpected request %s %s", req.Method, req.URL.Path)
+		return nil, nil
+	})
+	restore := shared.SetClientForTesting(client, &config.Profile{OrgID: "123", DefaultCurrency: "USD"})
+	defer restore()
+
+	body := `{"cpaGoal":{"amount":"2.00","currency":"USD"}}`
+	out, code := captureRun(t, []string{
+		"adgroups", "update",
+		"--campaign-id", "123",
+		"--adgroup-id", "456",
+		"--from-json", body,
+		"--check",
+		"-f", "json",
+	}, "")
+	if code != ExitSuccess {
+		t.Fatalf("exit code = %d, want %d; output=%q", code, ExitSuccess, out)
+	}
+	if requests != 1 {
+		t.Fatalf("expected exactly one campaign GET, got %d", requests)
+	}
+	got := mustUnmarshalMap(t, []byte(out))
+	checks, ok := got["readOnlyChecks"].([]any)
+	if !ok {
+		t.Fatalf("readOnlyChecks missing or wrong type: %v", got["readOnlyChecks"])
+	}
+	found := false
+	for _, c := range checks {
+		if s, _ := c.(string); s == "fetched campaign to verify SEARCH channel" {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Fatalf("expected readOnlyChecks to announce SEARCH-channel fetch; got %v", checks)
+	}
+}
+
+func TestAdGroupsUpdateCPAGoalFromJSONUsesJSONLabelOnNonSearchCampaign(t *testing.T) {
+	client := newTestClient(func(req *http.Request) (*http.Response, error) {
+		if req.Method == http.MethodGet && req.URL.Path == "/api/v5/campaigns/123" {
+			return jsonResponse(`{"data":{"id":123,"adChannelType":"DISPLAY"}}`), nil
+		}
+		t.Fatalf("unexpected request %s %s", req.Method, req.URL.Path)
+		return nil, nil
+	})
+	restore := shared.SetClientForTesting(client, &config.Profile{OrgID: "123", DefaultCurrency: "USD"})
+	defer restore()
+
+	body := `{"cpaGoal":{"amount":"2.00","currency":"USD"}}`
+	out, code := captureRun(t, []string{
+		"adgroups", "update",
+		"--campaign-id", "123",
+		"--adgroup-id", "456",
+		"--from-json", body,
+		"--check",
+	}, "")
+	if code == ExitSuccess {
+		t.Fatalf("expected failure for cpaGoal on non-SEARCH campaign; output=%q", out)
+	}
+	if !strings.Contains(out, "cpaGoal requires a SEARCH campaign") {
+		t.Fatalf("expected JSON label in error, got %q", out)
+	}
+	if strings.Contains(out, "--cpa-goal") {
+		t.Fatalf("did not expect --cpa-goal flag label, got %q", out)
 	}
 }
 
@@ -1188,6 +1469,191 @@ func TestKeywordsUpdateFlagPayload(t *testing.T) {
 		"--keyword-id", "789",
 		"--status", "PAUSED",
 		"--bid", "0.75",
+	}, "")
+	if code != ExitSuccess {
+		t.Fatalf("exit code = %d, want %d; output=%q", code, ExitSuccess, out)
+	}
+}
+
+func TestKeywordsCreateRejectsInvalidMatchTypeEvenWhenTextParsesEmpty(t *testing.T) {
+	restore := shared.SetClientForTesting(newTestClient(func(req *http.Request) (*http.Response, error) {
+		t.Fatalf("unexpected request %s %s", req.Method, req.URL.Path)
+		return nil, nil
+	}), &config.Profile{OrgID: "123", DefaultCurrency: "USD"})
+	defer restore()
+
+	out, code := captureRun(t, []string{
+		"keywords", "create",
+		"--campaign-id", "123",
+		"--adgroup-id", "456",
+		"--text", ",,,",
+		"--match-type", "nope",
+	}, "")
+	if code == ExitSuccess {
+		t.Fatalf("expected failure for invalid match type; output=%q", out)
+	}
+	if !strings.Contains(out, "invalid match type") {
+		t.Fatalf("expected invalid-match-type error, got %q", out)
+	}
+}
+
+func TestKeywordsCreateRejectsExplicitEmptyMatchType(t *testing.T) {
+	restore := shared.SetClientForTesting(newTestClient(func(req *http.Request) (*http.Response, error) {
+		t.Fatalf("unexpected request %s %s", req.Method, req.URL.Path)
+		return nil, nil
+	}), &config.Profile{OrgID: "123", DefaultCurrency: "USD"})
+	defer restore()
+
+	out, code := captureRun(t, []string{
+		"keywords", "create",
+		"--campaign-id", "123",
+		"--adgroup-id", "456",
+		"--text", "fitness coach",
+		"--match-type", "",
+		"--check",
+	}, "")
+	if code == ExitSuccess {
+		t.Fatalf("expected failure for empty match type; output=%q", out)
+	}
+	if !strings.Contains(out, "invalid match type") {
+		t.Fatalf("expected invalid-match-type error, got %q", out)
+	}
+}
+
+func TestKeywordsCreateRejectsEmptyTextListWithValidMatchType(t *testing.T) {
+	restore := shared.SetClientForTesting(newTestClient(func(req *http.Request) (*http.Response, error) {
+		t.Fatalf("unexpected request %s %s", req.Method, req.URL.Path)
+		return nil, nil
+	}), &config.Profile{OrgID: "123", DefaultCurrency: "USD"})
+	defer restore()
+
+	out, code := captureRun(t, []string{
+		"keywords", "create",
+		"--campaign-id", "123",
+		"--adgroup-id", "456",
+		"--text", ",,,",
+		"--match-type", "EXACT",
+	}, "")
+	if code == ExitSuccess {
+		t.Fatalf("expected failure for empty keyword list; output=%q", out)
+	}
+	if !strings.Contains(out, "--text") {
+		t.Fatalf("expected error mentioning --text, got %q", out)
+	}
+}
+
+// TestFromJSONRejectsShortcutFlags ensures shortcut flags can't silently
+// coexist with --from-json across the four mutation commands. The JSON path
+// ignores shortcut flags, so accepting the combination would mask user error.
+func TestFromJSONRejectsShortcutFlags(t *testing.T) {
+	tests := []struct {
+		name     string
+		args     []string
+		conflict string
+	}{
+		{
+			name: "adgroups create + --status",
+			args: []string{
+				"adgroups", "create",
+				"--campaign-id", "123",
+				"--from-json", `{"name":"x","defaultBidAmount":{"amount":"1.50","currency":"USD"}}`,
+				"--status", "PAUSED",
+			},
+			conflict: "--status",
+		},
+		{
+			name: "adgroups create + --cpa-goal",
+			args: []string{
+				"adgroups", "create",
+				"--campaign-id", "123",
+				"--from-json", `{"name":"x","defaultBidAmount":{"amount":"1.50","currency":"USD"}}`,
+				"--cpa-goal", "2.00",
+			},
+			conflict: "--cpa-goal",
+		},
+		{
+			name: "adgroups update + --default-bid (no --merge)",
+			args: []string{
+				"adgroups", "update",
+				"--campaign-id", "123",
+				"--adgroup-id", "456",
+				"--from-json", `{"status":"PAUSED"}`,
+				"--default-bid", "1.50",
+			},
+			conflict: "--default-bid",
+		},
+		{
+			name: "keywords create + --match-type",
+			args: []string{
+				"keywords", "create",
+				"--campaign-id", "123",
+				"--adgroup-id", "456",
+				"--from-json", `[{"text":"x","matchType":"EXACT"}]`,
+				"--match-type", "BROAD",
+			},
+			conflict: "--match-type",
+		},
+		{
+			name: "keywords update + --bid",
+			args: []string{
+				"keywords", "update",
+				"--campaign-id", "123",
+				"--adgroup-id", "456",
+				"--keyword-id", "789",
+				"--from-json", `[{"id":789,"status":"PAUSED"}]`,
+				"--bid", "1.50",
+			},
+			conflict: "--bid",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			restore := shared.SetClientForTesting(newTestClient(func(req *http.Request) (*http.Response, error) {
+				t.Fatalf("no request should be sent on flag-conflict rejection: %s %s", req.Method, req.URL.Path)
+				return nil, nil
+			}), &config.Profile{OrgID: "123", DefaultCurrency: "USD"})
+			defer restore()
+
+			out, code := captureRun(t, tt.args, "")
+			if code != ExitUsage {
+				t.Fatalf("exit code = %d, want %d; output=%q", code, ExitUsage, out)
+			}
+			if !strings.Contains(out, tt.conflict) {
+				t.Fatalf("expected error to cite %s, got %q", tt.conflict, out)
+			}
+			if !strings.Contains(out, "--from-json") {
+				t.Fatalf("expected error to mention --from-json, got %q", out)
+			}
+		})
+	}
+}
+
+// TestAdGroupsUpdateMergeAllowsFromJSONWithShortcuts confirms --merge keeps
+// the documented overlay behavior: shortcut flags layer on top of --from-json.
+func TestAdGroupsUpdateMergeAllowsFromJSONWithShortcuts(t *testing.T) {
+	requests := 0
+	client := newTestClient(func(req *http.Request) (*http.Response, error) {
+		requests++
+		switch {
+		case req.Method == http.MethodGet && req.URL.Path == "/api/v5/campaigns/123/adgroups/456":
+			return jsonResponse(`{"data":{"id":456,"name":"original","defaultBidAmount":{"amount":"1.00","currency":"USD"}}}`), nil
+		case req.Method == http.MethodPut && req.URL.Path == "/api/v5/campaigns/123/adgroups/456":
+			return jsonResponse(`{"data":{"id":456}}`), nil
+		}
+		t.Fatalf("unexpected request %s %s", req.Method, req.URL.Path)
+		return nil, nil
+	})
+	restore := shared.SetClientForTesting(client, &config.Profile{OrgID: "123", DefaultCurrency: "USD"})
+	defer restore()
+
+	out, code := captureRun(t, []string{
+		"adgroups", "update",
+		"--campaign-id", "123",
+		"--adgroup-id", "456",
+		"--merge",
+		"--from-json", `{"name":"from-json"}`,
+		"--status", "PAUSED",
 	}, "")
 	if code != ExitSuccess {
 		t.Fatalf("exit code = %d, want %d; output=%q", code, ExitSuccess, out)

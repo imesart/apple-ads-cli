@@ -72,6 +72,13 @@ Examples:
 				return shared.UsageError("cannot use --from-json @- with stdin-piped ID flags")
 			}
 
+			if *dataFile != "" {
+				conflicts := shared.VisitedFlagNames(fs, "bid", "status")
+				if len(conflicts) > 0 {
+					return shared.UsageErrorf("--from-json cannot be combined with --%s (shortcut flags are ignored under --from-json)", conflicts[0])
+				}
+			}
+
 			execOnce := func() (any, error) {
 				cid := strings.TrimSpace(*campaignID)
 				if cid == "" {
@@ -145,7 +152,10 @@ Examples:
 					}
 				} else if hasShortcuts {
 					update := map[string]any{"id": kwid}
-					if err = applyKeywordShortcuts(update, resolvedBid, *status); err != nil {
+					if err = ApplyFields(update, Fields{
+						Bid:    resolvedBid,
+						Status: *status,
+					}); err != nil {
 						return nil, err
 					}
 					body, err = json.Marshal([]any{update})
@@ -156,7 +166,7 @@ Examples:
 					return nil, shared.UsageError("--from-json, --bid, or --status is required")
 				}
 
-				if err = shared.CheckBidLimitJSON(body); err != nil {
+				if err = ValidatePayload(body); err != nil {
 					return nil, err
 				}
 				if *check {
@@ -189,18 +199,4 @@ Examples:
 			return shared.PrintOutput(resp, *output.Output, *output.Fields, *output.Pretty, "KEYWORDID")
 		},
 	}
-}
-
-func applyKeywordShortcuts(m map[string]any, bid map[string]string, status string) error {
-	if bid != nil {
-		m["bidAmount"] = bid
-	}
-	if status != "" {
-		s, err := shared.NormalizeStatus(status, "ACTIVE")
-		if err != nil {
-			return err
-		}
-		m["status"] = s
-	}
-	return nil
 }
